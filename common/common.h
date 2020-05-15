@@ -1,4 +1,4 @@
-#ifdef
+#ifndef
 
 #include <iostream>
 #include <vector>
@@ -6,9 +6,9 @@
 #include <algorithm>
 #include <string>
 
+using namespace std;
+
 #endif
 
-int logWrite(string logPath,string str)
-{
-    
-}
+//int configRead();
+//int logWrite(string logPath,string str);
