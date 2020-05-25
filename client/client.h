@@ -1,24 +1,35 @@
-#ifndef
+#ifndef CLIENT_H
+#define CLIENT_H
 
 #include "../common/common.h"
 
-#include
 
-#define debugOptNum 6
 
-class clientInfo{
+class client{
     private:
-        string clientIPAddr;//客户端IP地址
+        string serverIPAddr;//客户端IP地址
+        int port;
         int exitOpt;
         int minDevNum;
         int maxDevNum;
         int minScrNum;
         int maxScrNum;
         int logOpt;
-        char debugOpt[debugOptNum];
+        string debugOpt;
         int debugOutput;
-    public:
-        clientInfo();
 
+        int socketfd;
+    public:
+        client();
+        void infoPrint();
+        int clientMain();
+        int localBind();
+        int identity();
+        int dataRecv();
+        int dataSend();
 
 };
+
+
+#endif
+
