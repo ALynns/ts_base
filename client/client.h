@@ -24,9 +24,9 @@ class client{
         void infoPrint();
         int clientMain();
         int localBind();
-        int identity();
-        int dataRecv();
-        int dataSend();
+        int identity();//
+        void dataRecv(char *recvBuf,int recvSize);
+        void dataSend(const char *sendBuf, int sendBufSize);
 
 };
 

@@ -6,6 +6,6 @@ using namespace std;
 int main()
 {
     client ct;
-    //ct.infoPrint();
+    ct.clientMain();
     return 0;
 }

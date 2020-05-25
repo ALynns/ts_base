@@ -3,7 +3,7 @@
 
 using namespace std;
 
-client::clientInfo()
+client::client()
 {
     map<string, string> configOpt = {{"服务器IP地址", "0.0.0.0"},
                                      {"端口号", "53935"},
@@ -45,7 +45,7 @@ client::clientInfo()
         }
     }
     
-    clientIPAddr=configOpt["服务器IP地址"];//客户端IP地址
+    serverIPAddr=configOpt["服务器IP地址"];//客户端IP地址
     port=atoi(configOpt["端口号"].c_str());
     exitOpt=atoi(configOpt["进程接收成功后退出"].c_str());
     minDevNum=atoi(configOpt["最小配置终端数量"].c_str());
