@@ -2,7 +2,7 @@
 
 using namespace std;
 
-int logWrite(string logPath, int mode, string opt, string data)
+int logWrite(string logPath, int mode, string opt, const byte data[], int dataLength)
 {
     int fd;
     char temp[100] = {0};
@@ -13,64 +13,91 @@ int logWrite(string logPath, int mode, string opt, string data)
         return -1;
     }
     flock(fd, LOCK_EX);
-    if (mode)
-    {
-        write(fd, buf, strlen(buf));
-    }
-    else
-    {
-        time_t t = time(nullptr);
-        struct tm *tmTime = localtime(&t);
 
-        strftime(temp, sizeof(temp), "%Y-%m-%d %H:%M:%S ", tmTime);
-        string buf = temp;
-        buf = buf + " [" + to_string(getpid()) + "]" + opt + "\n";
+    time_t t = time(nullptr);
+    struct tm *tmTime = localtime(&t);
 
-        switch (mode)
+    strftime(temp, sizeof(temp), "%Y-%m-%d %H:%M:%S ", tmTime);
+    string buf = temp;
+    buf = buf + " [" + to_string(getpid()) + "]" + opt + "\n";
+
+    switch (mode)
+    {
+        case 1:
         {
-            case 1:
+            int it = 0;
+            for (int i = 0; i <= dataLength / 16; ++i)
             {
-                string::iterator it = data.begin();
-                string hexStr = "", str = "";
+                string line="", str = "";
+                sprintf(temp, "  %04x: ", i * 16);
+                line = line + temp;
 
-                for (int i = 0; i <= data.size() / 8; ++i)
+                int j = 0;
+                for (; j < 8; ++j, ++it)
                 {
-                    int j = 0;
-                    for (; j < 8; ++j)
+                    if (it < dataLength)
                     {
-                        if(it<data.end())
+                        sprintf(temp, " %02x", data[it]);
+                        line = line + temp;
+
+                        if (data[it] > ' ' && data[it] < 127)
                         {
-                            if (*it > ' ' && *it < 127)
-                            {
-                                str = str + *it;
-                                sprintf(buf,"0xd",)
-                            }
-                            else
-                            {
-                                str = str + ".";
-                            }
+                            str = str + data[it];
                         }
                         else
                         {
-                            
+                            str = str + ".";
                         }
-                        
-                            
                     }
-
-                    for (; j < 16; ++j)
+                    else
                     {
-
+                        str=str+" ";
+                        line = line + "   ";
                     }
                 }
-                break;
-            }
-            default:
-                break;
-        }
 
-        write(fd, buf.c_str(), buf.size());
+                if (it < dataLength)
+                {
+                    line = line + " -";
+                }
+                else
+                {
+                    line = line + "  ";
+                }
+
+                for (; j < 16; ++j, ++it)
+                {
+                    if (it < dataLength)
+                    {
+                        sprintf(temp, " %02x", data[it]);
+                        line = line + temp;
+
+                        if (data[it] > ' ' && data[it] < 127)
+                        {
+                            str = str + data[it];
+                        }
+                        else
+                        {
+                            str = str + ".";
+                        }
+                    }
+                    else
+                    {
+                        str=str+" ";
+                        line = line + "   ";
+                    }
+                }
+                line = line + "  " + str + "\n";
+                buf = buf + line;
+            }
+            break;
+        }
+        default:
+            break;
     }
-    
+
+    write(fd, buf.c_str(), buf.size());
+
     flock(fd,LOCK_UN);
+    return 0;
 }

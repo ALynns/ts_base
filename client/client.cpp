@@ -5,8 +5,80 @@ using namespace std;
 
 int client::clientMain()
 {
+    byte buf[1000];
     this->localBind();
-    this->identity();
+    while (1)
+    {
+        int packType = packAnalysis(buf);
+        if (packType == PACK_IDS_REQ_S)
+        {
+            
+            break;
+        }
+        else
+            continue;
+    }
+
+
+    while(1)
+    {
+        packType = packAnalysis(buf);
+        switch (packType)
+        {
+            case PACK_SYS_INFO_REQ_S:
+            {
+                break;
+            }
+            case PACK_CONF_INFO_REQ_S:
+            {
+                break;
+            }
+            case PACK_PROC_INFO_REQ_S:
+            {
+                break;
+            }
+            case PACK_ETH_PORT_INFO_REQ_S:
+            {
+                break;
+            }
+            case PACK_FLASH_INFO_REQ_S:
+            {
+                break;
+            }
+            case PACK_PRINT_PORT_INFO_REQ_S:
+            {
+                break;
+            }
+            case PACK_TTY_SER_INFO_REQ_S:
+            {
+                break;
+            }
+            case PACK_TTY_INFO_REQ_S:
+            {
+                break;
+            }
+            case PACK_IP_TTY_INFO_REQ_S:
+            {
+                break;
+            }
+            case PACK_FLASH_FILE_INFO_REQ_S:
+            {
+                break;
+            }
+            case PACK_PRINT_QUE_INFO_REQ_S:
+            {
+                break;
+            }
+            case PACK_DISCON_REQ_S:
+            {
+                break;
+            }
+            
+
+            default:
+                break;
+        }
+    }
 
     return 0;
 }
@@ -143,6 +215,7 @@ void client::dataRecv(char *recvBuf,int recvSize)
             else
                 break;
         }
+
     }
     //FD_ISSET(socketfd, &fdsr)判断套接字是否就绪，本题仅监控一个描述符可以略过
 	while (1)
@@ -158,12 +231,40 @@ void client::dataRecv(char *recvBuf,int recvSize)
                 break;
         }
     }
+
+
 }
 
-int client::identity()
+int client::packAnalysis(byte *buf)
 {
-    byte idsBuf[60];
-    dataRecv(idsBuf,60);
+    dataRecv(buf,8);
+    int dataLength = ntohs((short *)(buf + 2));
+    dataRecv(buf + 8, dataLength - 8);
+    string logStr="读取"+to_string(dataLength)+"字节";
+    logWrite(LocalLogPath, 0, logStr, "", 0);
+
+    logStr="(读取数据为:)\n";
+    logWrite(LocalLogPath, 1, logStr, buf, dataLength);
+
+    switch (buf[0])
+    {
+        case 0x11://服务器包
+        {
+            return ServerPackType[buf[1]];
+            break;
+        }
+        case 0x91:
+        {
+            break;
+        }
+
+        default:
+            break;
+    }
+}
+
+int client::identity(byte idsBuf[];)
+{
     
 
 

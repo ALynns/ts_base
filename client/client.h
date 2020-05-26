@@ -3,8 +3,6 @@
 
 #include "../common/common.h"
 
-
-
 class client{
     private:
         string serverIPAddr;//¿Í»§¶ËIPµØÖ·
@@ -24,6 +22,7 @@ class client{
         void infoPrint();
         int clientMain();
         int localBind();
+        int packAnalysis(byte *buf);
         int identity();//
         void dataRecv(char *recvBuf,int recvSize);
         void dataSend(const char *sendBuf, int sendBufSize);

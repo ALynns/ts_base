@@ -25,14 +25,76 @@
 #include <sys/errno.h>
 #include <arpa/inet.h>
 
+#define PACK_IDS_REQ_S 0//服务器认证请求
+#define PACK_VER_INFO_C 1//设备版本需求
+#define PACK_IDS_ANS_C 2//客户端认证信息
+#define PACK_SYS_INFO_REQ_S 3//系统信息
+#define PACK_SYS_INFO_ANS_C 4
+#define PACK_CONF_INFO_REQ_S 5//配置信息
+#define PACK_CONF_INFO_ANS_C 6
+#define PACK_PROC_INFO_REQ_S 7//进程信息
+#define PACK_PROC_INFO_ANS_C 8
+#define PACK_ETH_PORT_INFO_REQ_S 9//以太口信息
+#define PACK_ETH_PORT_INFO_ANS_C 10
+#define PACK_FLASH_INFO_REQ_S 11//U盘口信息
+#define PACK_FLASH_INFO_ANS_C 12
+#define PACK_FLASH_FILE_INFO_REQ_S 13//U盘文件信息
+#define PACK_FLASH_FILE_INFO_ANS_C 14
+#define PACK_PRINT_PORT_INFO_REQ_S 15//打印口信息
+#define PACK_PRINT_PORT_INFO_ANS_C 16
+#define PACK_PRINT_QUE_INFO_REQ_S 17//打印队列信息
+#define PACK_PRINT_QUE_INFO_ANS_C 18
+#define PACK_TTY_SER_INFO_REQ_S 19//终端服务信息
+#define PACK_TTY_SER_INFO_ANS_C 20
+#define PACK_TTY_INFO_REQ_S 21//哑终端虚屏信息
+#define PACK_TTY_INFO_ANS_C 22
+#define PACK_IP_TTY_INFO_REQ_S 23//IP终端虚屏信息
+#define PACK_IP_TTY_INFO_ANS_C 24
+#define PACK_DISCON_REQ_S 25//断开连接
+#define PACK_DISCON_ANS_C 26
+
 using namespace std;
 
 typedef char byte;
+
+const string LocalLogPath = "./local.log";
+
+const map<short, int> ServerPackType = {{0x01, PACK_IDS_REQ_S},
+                                        {0x02, PACK_SYS_INFO_REQ_S},
+                                        {0x03, PACK_CONF_INFO_REQ_S},
+                                        {0x04, PACK_PROC_INFO_REQ_S},
+                                        {0x05, PACK_ETH_PORT_INFO_REQ_S},
+                                        {0x07, PACK_FLASH_INFO_REQ_S},
+                                        {0x08, PACK_PRINT_PORT_INFO_REQ_S},
+                                        {0x09, PACK_TTY_SER_INFO_REQ_S},
+                                        {0x0a, PACK_TTY_INFO_REQ_S},
+                                        {0x0b, PACK_IP_TTY_INFO_REQ_S},
+                                        {0x0c, PACK_FLASH_FILE_INFO_REQ_S},
+                                        {0x0d, PACK_PRINT_QUE_INFO_REQ_S},
+                                        {0xff, PACK_DISCON_REQ_S}};
+
+const map<short, int> ClientPackType = {{0x00, PACK_VER_INFO_C},
+                                        {0x01, PACK_IDS_ANS_C},
+                                        {0x02, PACK_SYS_INFO_ANS_C},
+                                        {0x03, PACK_SYS_INFO_ANS_C},
+                                        {0x04, PACK_PROC_INFO_ANS_C},
+                                        {0x05, PACK_ETH_PORT_INFO_ANS_C},
+                                        {0x07, PACK_FLASH_INFO_ANS_C},
+                                        {0x08, PACK_PRINT_PORT_INFO_ANS_C},
+                                        {0x09, PACK_TTY_SER_INFO_ANS_C},
+                                        {0x0a, PACK_TTY_INFO_ANS_C},
+                                        {0x0b, PACK_IP_TTY_INFO_ANS_C},
+                                        {0x0c, PACK_FLASH_FILE_INFO_ANS_C},
+                                        {0x0d, PACK_PRINT_QUE_INFO_ANS_C},
+                                        {0xff, PACK_DISCON_ANS_C}};
+
+
+
 //int logWrite(string logPath,string str);
 
-int packHeadStuff(byte *packBuf, byte headOpt1, byte headOpt2, short packLength, short headOpt3, short dataLength);
-int logWrite(string logPath,int mode,string data);
 
+int packHeadStuff(byte *packBuf, byte headOpt1, byte headOpt2, short packLength, short headOpt3, short dataLength);
+int logWrite(string logPath, int mode, string opt, const byte data[], int dataLength);
 
 #endif
 
