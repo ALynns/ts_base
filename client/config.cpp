@@ -69,6 +69,7 @@ client::client()
     logOpt=atoi(configOpt["删除日志文件"].c_str());
     debugOpt=configOpt["DEBUG设置"];
     debugOutput=atoi(configOpt["DEBUG屏幕显示"].c_str());
+    closeFlag = 0;
 }
 
 void client::infoPrint()

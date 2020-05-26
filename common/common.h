@@ -57,6 +57,8 @@ using namespace std;
 
 typedef char byte;
 
+const string IdsStr="yzmond:id*str&to!tongji@by#Auth^";
+
 const string LocalLogPath = "./local.log";
 
 const map<short, int> ServerPackType = {{0x01, PACK_IDS_REQ_S},

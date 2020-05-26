@@ -15,7 +15,7 @@ class client{
         int logOpt;
         string debugOpt;
         int debugOutput;
-
+        int closeFlag;
         int socketfd;
     public:
         client();
@@ -23,7 +23,9 @@ class client{
         int clientMain();
         int localBind();
         int packAnalysis(byte *buf);
-        int identity();//
+        int identity(byte idsBuf[]);//
+        int minimumVerReq();
+        int idsAns();
         void dataRecv(char *recvBuf,int recvSize);
         void dataSend(const char *sendBuf, int sendBufSize);
 
