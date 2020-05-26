@@ -31,6 +31,8 @@ typedef char byte;
 //int logWrite(string logPath,string str);
 
 int packHeadStuff(byte *packBuf, byte headOpt1, byte headOpt2, short packLength, short headOpt3, short dataLength);
+int logWrite(string logPath,int mode,string data);
+
 
 #endif
 

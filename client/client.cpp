@@ -163,9 +163,9 @@ void client::dataRecv(char *recvBuf,int recvSize)
 int client::identity()
 {
     byte idsBuf[60];
-    packHeadStuff(idsBuf, 0x11, 0x01, 60, 0x0, 52);
-
+    dataRecv(idsBuf,60);
     
+
 
     return 0;
 }

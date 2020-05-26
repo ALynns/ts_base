@@ -13,14 +13,24 @@ client::client()
                                      {"每个终端最小虚屏数量", "3"},
                                      {"每个终端最大虚屏数量", "10"},
                                      {"删除日志文件", "0"},
-                                     {"DEBUG 设置", "111111"},
-                                     {"DEBUG 屏幕显示", "0"}};
+                                     {"DEBUG设置", "111111"},
+                                     {"DEBUG屏幕显示", "0"}};
+
+    map<string, int> configFlag = {{"服务器IP地址", 0},
+                                     {"端口号", 0},
+                                     {"进程接收成功后退出", 0,
+                                     {"最小配置终端数量", 0},
+                                     {"最大配置终端数量", 0},
+                                     {"每个终端最小虚屏数量", 0},
+                                     {"每个终端最大虚屏数量", 0},
+                                     {"删除日志文件", 0},
+                                     {"DEBUG设置", 0},
+                                     {"DEBUG屏幕显示", 0}};
 
     fstream fs("ts.conf",ios::in|ios::out);
 
     if(!fs){
-        cout << "open config failed" << endl;
-        return ;
+        cout << "配置文件读取失败，将使用默认配置。" << endl;
     }
 
     while (!fs.eof())
@@ -35,13 +45,17 @@ client::client()
         else
         {
             //int blankNum = 0, tabNum = 0;
-            
+
             if (buf.find_first_not_of(" \t") != 0)
                 buf.erase(0, buf.find_first_not_of(" \t"));
             string optName(buf.begin(), buf.begin() + buf.find_first_of(" \t"));
+
+            if (configFlag[optName])
+                continue;
+                
             string optValue(buf.begin() + buf.find_first_not_of(" \t", optName.length()), buf.begin() + buf.find_last_not_of(" \t") + 1);
-            configOpt[optName]=optValue;
-            
+            configOpt[optName] = optValue;
+            configFlag[optName] = 1;
         }
     }
     
@@ -53,8 +67,8 @@ client::client()
     minScrNum=atoi(configOpt["每个终端最小虚屏数量"].c_str());
     maxScrNum=atoi(configOpt["每个终端最大虚屏数量"].c_str());
     logOpt=atoi(configOpt["删除日志文件"].c_str());
-    debugOpt=configOpt["DEBUG 设置"];
-    debugOutput=atoi(configOpt["DEBUG 屏幕显示"].c_str());
+    debugOpt=configOpt["DEBUG设置"];
+    debugOutput=atoi(configOpt["DEBUG屏幕显示"].c_str());
 }
 
 void client::infoPrint()
