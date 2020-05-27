@@ -55,7 +55,7 @@
 
 using namespace std;
 
-typedef char byte;
+typedef u_char byte;
 
 const string IdsStr="yzmond:id*str&to!tongji@by#Auth^";
 const string LocalLogPath = "./local.log";

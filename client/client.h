@@ -26,8 +26,8 @@ class client{
         int identity(byte idsBuf[]);//
         int minimumVerReq();
         int idsAns();
-        void dataRecv(char *recvBuf,int recvSize);
-        void dataSend(const char *sendBuf, int sendBufSize);
+        void dataRecv(byte *recvBuf,int recvSize);
+        void dataSend(const byte *sendBuf, int sendBufSize);
 
 };
 

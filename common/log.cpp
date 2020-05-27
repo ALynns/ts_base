@@ -42,7 +42,7 @@ int logWrite(string logPath, int mode, string opt, const byte data[], int dataLe
 
                         if (data[it] > ' ' && data[it] < 127)
                         {
-                            str = str + data[it];
+                            str = str + (char)(data[it]);
                         }
                         else
                         {
@@ -74,7 +74,7 @@ int logWrite(string logPath, int mode, string opt, const byte data[], int dataLe
 
                         if (data[it] > ' ' && data[it] < 127)
                         {
-                            str = str + data[it];
+                            str = str + (char)(data[it]);
                         }
                         else
                         {

@@ -176,7 +176,7 @@ int client::localBind()
     return 0;
 }
 
-void client::dataSend(const char *sendBuf, int sendBufSize)
+void client::dataSend(const byte *sendBuf, int sendBufSize)
 {
     int ret;
 
@@ -213,7 +213,7 @@ void client::dataSend(const char *sendBuf, int sendBufSize)
 	}
 }
 
-void client::dataRecv(char *recvBuf,int recvSize)
+void client::dataRecv(byte *recvBuf,int recvSize)
 {
     int ret;
 
@@ -271,7 +271,7 @@ int client::packAnalysis(byte buf[])
     int dataLength = ntohs(*(short *)(buf + 2));
     dataRecv(buf + 8, dataLength - 8);
     string logStr="读取"+to_string(dataLength)+"字节";
-    logWrite(LocalLogPath, 0, logStr, "", 0);
+    logWrite(LocalLogPath, 0, logStr, nullptr, 0);
 
     logStr="(读取数据为:)\n";
     logWrite(LocalLogPath, 1, logStr, buf, dataLength);
@@ -296,14 +296,19 @@ int client::packAnalysis(byte buf[])
 
 int client::identity(byte buf[])
 {
-    logWrite(LocalLogPath, 0, "开始认证", nullptr, 0);
+    string logStr="开始认证";
+    logWrite(LocalLogPath, 0, logStr.c_str(), nullptr, 0);
     short ver1 = ntohs(*(short *)(buf + 8));
-    char ver2 = *(buf + 10);
-    char ver3 = *(buf + 11);
-    if (ver1 > 1)
+    u_char ver2 = *(buf + 10);
+    u_char ver3 = *(buf + 11);
+
+    logStr="版本号"+to_string(ver1)+"."+to_string(ver1)+"."+to_string(ver1);
+    logWrite(LocalLogPath, 0, logStr.c_str(), nullptr, 0);
+    if (ver1 < 2)
     {
-        cout << "版本过低" << endl;
-        logWrite(LocalLogPath, 0, "版本过低", nullptr, 0);
+        logStr="版本过低";
+        cout << logStr << endl;
+        logWrite(LocalLogPath, 0, logStr, nullptr, 0);
         closeFlag = 1;
         return -1;
     }
@@ -311,10 +316,14 @@ int client::identity(byte buf[])
     time_t svr_time = (time_t)ntohs(*(int *)(buf + 56)) ^ (u_int)(0xFFFFFFFF);
     struct tm *st;
     st = localtime(&svr_time);
+
+    logStr="服务器时间:"+to_string(st->tm_year + 1900)+"-"+to_string(st->tm_mon)+"-"+to_string(st->tm_mday)+" "+to_string(st->tm_hour)+"."+to_string(st->tm_min)+"."+to_string(st->tm_sec);
+    logWrite(LocalLogPath, 0, logStr.c_str(), nullptr, 0);
     if(st->tm_year + 1900 < 2017)
     {
-        cout << "数字证书过期" << endl;
-        logWrite(LocalLogPath, 0, "数字证书过期", nullptr, 0);
+        logStr="数字证书过期";
+        cout << logStr << endl;
+        logWrite(LocalLogPath, 0, logStr.c_str(), nullptr, 0);
         closeFlag = 1;
         return -1;
     }
@@ -352,7 +361,7 @@ int client::minimumVerReq()
     dataSend(buf, 12);
 
     string logStr = "发送" + to_string(12) + "字节";
-    logWrite(LocalLogPath, 0, logStr, "", 0);
+    logWrite(LocalLogPath, 0, logStr, nullptr, 0);
 
     logStr = "(发送数据为:)\n";
     logWrite(LocalLogPath, 1, logStr, buf, 12);
@@ -361,12 +370,13 @@ int client::minimumVerReq()
 
 int client::idsAns()
 {
-    byte buf[116] = {0};
+    /*byte buf[116] = {0};
     packHeadStuff(buf,0x91,0x01,116,0x0000,108);
     FILE *fp = popen("cat /proc/cpuinfo | grep cpu |grep MHz","r");
 	byte buff[1000];
 	fgets(buff,1000,fp);
 	printf("%s",buff);
 	pclose(fp);
+    return 0;*/
     return 0;
 }

@@ -17,4 +17,4 @@ gdbDebug :
 	g++ -g -rdynamic -Wall -std=c++11 $(head) $(cppFile)
 
 clean :
-	-rm -rf $(object) *.o *.out *.gch
+	-rm -rf $(object) *.o *.out *.gch *.log
