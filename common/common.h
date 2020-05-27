@@ -65,5 +65,6 @@ int packHeadStuff(byte *packBuf, byte headOpt1, byte headOpt2, short packLength,
 int logWrite(string logPath, int mode, string opt, const byte data[], int dataLength);
 int getCPUMHz();
 int getRAM();
+string randRam(int length);
 #endif
 

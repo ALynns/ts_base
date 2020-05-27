@@ -5,6 +5,7 @@
 
 class client{
     private:
+        int devid;
         string serverIPAddr;//¿Í»§¶ËIPµØÖ·
         int port;
         int exitOpt;
@@ -18,7 +19,7 @@ class client{
         int closeFlag;
         int socketfd;
     public:
-        client();
+        client(int id);
         void infoPrint();
         int clientMain();
         int localBind();

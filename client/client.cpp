@@ -14,35 +14,33 @@ int client::clientMain()
         short fail_reConnnectSec = 0, succ_reConnnectSec = 0;
         closeFlag = 0;
         localBind();
-        while (!closeFlag)
+        
+        int packType = packAnalysis(buf);
+        if (packType == PACK_IDS_REQ_S)
         {
-            int packType = packAnalysis(buf);
-            if (packType == PACK_IDS_REQ_S)
-            {
-                int ret;
-                fail_reConnnectSec = ntohs(*(short *)(buf + 12));
-                succ_reConnnectSec = ntohs(*(short *)(buf + 14));
+            int ret;
+            fail_reConnnectSec = ntohs(*(short *)(buf + 12));
+            succ_reConnnectSec = ntohs(*(short *)(buf + 14));
 
-                ret = identity(buf);
-                if (ret == -1)
-                {
-                    closeFlag = 1;
-                }
-                else
-                {
-                    idsAns();
-                }
-                break;
+            ret = identity(buf);
+            if (ret == -1)
+            {
+                closeFlag = 1;
             }
             else
             {
-                closeFlag = 1;
-                break;
+                idsAns();
             }
         }
+        else
+        {
+            closeFlag = 1;
+        }
+        
 
         while (!closeFlag)
         {
+            memset(buf,0,1000);
             int packType = this->packAnalysis(buf);
             switch (packType)
             {
@@ -100,7 +98,7 @@ int client::clientMain()
             }
         }
 
-        if (closeFlag)
+        /*if (closeFlag)
         {
             close(socketfd);
             if (closeFlag == 1)
@@ -108,7 +106,8 @@ int client::clientMain()
             else
                 sleep(succ_reConnnectSec);
             continue;
-        }
+        }*/
+        break;
     }
     return 0;
 }
@@ -177,7 +176,8 @@ int client::localBind()
         else
             break;
     }
-
+    string logStr="服务器已连接";
+    logWrite(LocalLogPath, 0, logStr, nullptr, 0);
     return 0;
 }
 
@@ -254,6 +254,8 @@ void client::dataRecv(byte *recvBuf,int recvSize)
         if(ret==0)
         {
             closeFlag = 1;
+            string logStr="对方关闭了连接";
+            logWrite(LocalLogPath, 0, logStr, nullptr, 0);
             return;
         }    
 
@@ -273,12 +275,14 @@ void client::dataRecv(byte *recvBuf,int recvSize)
 int client::packAnalysis(byte buf[])
 {
     dataRecv(buf,8);
+    if(closeFlag==1)
+        return 0;
     int dataLength = ntohs(*(short *)(buf + 2));
     dataRecv(buf + 8, dataLength - 8);
     string logStr="读取"+to_string(dataLength)+"字节";
     logWrite(LocalLogPath, 0, logStr, nullptr, 0);
 
-    logStr="(读取数据为:)\n";
+    logStr="(读取数据为:)";
     logWrite(LocalLogPath, 1, logStr, buf, dataLength);
 
     switch ((u_char)buf[0])
@@ -343,7 +347,6 @@ int client::identity(byte buf[])
         encryptedStr[i] = encryptedStr[i] ^ secret[pos % 4093];
     }
     string r_s = encryptedStr;
-    cout<<r_s<<endl;
     if(r_s==IdsStr)
     {
         logStr="认证成功";
@@ -373,7 +376,7 @@ int client::minimumVerReq()
     string logStr = "发送" + to_string(12) + "字节";
     logWrite(LocalLogPath, 0, logStr, nullptr, 0);
 
-    logStr = "(发送数据为:)\n";
+    logStr = "(发送数据为:)";
     logWrite(LocalLogPath, 1, logStr, buf, 12);
     return 0;
 }
@@ -383,8 +386,53 @@ int client::idsAns()
     byte buf[116] = {0};
     packHeadStuff(buf,0x91,0x01,116,0x0000,108);
 
-    short cpuMhz=(short)getCPUMHz();
-    short ram=(short)getRAM();
-    
+    short cpuMhz=htons((short)getCPUMHz());//CPU主频
+    memcpy(buf+8,&cpuMhz,sizeof(short));
+
+    short ram=htons((short)getRAM());//RAM大小
+    memcpy(buf+10,&ram,sizeof(short));
+
+    *(short *)(buf+12)=htons((short)(rand()));//FLASH大小
+
+    *(short *)(buf+14)=htons((short)(1));//内部序列号
+
+    memcpy((buf+16),randRam(16).c_str(),16);//组序列号
+
+    memcpy((buf+32),randRam(16).c_str(),16);//设备型号
+
+    memcpy((buf+48),randRam(16).c_str(),16);//软件版本号
+
+    *(buf+64)=rand()%3;//以太口数量
+
+    *(buf+65)=rand()%3;//同步口数量
+
+    *(buf+66)=rand()%3*8;//异步口数量
+
+    *(buf+67)=rand()%4*8;//交换口数量
+
+    *(buf+68)=rand()%2;//USB口数量
+
+    *(buf+69)=rand()%2;//打印口数量
+
+    *(int *)(buf+72)=htonl(devid);//机构号
+
+    *(buf+76)=1;
+
+    u_int random_num=(u_int)rand(); 
+    int pos=random_num%4093;
+    for(int i=0;i<32;++i,++pos)
+    {
+        buf[80+i]=IdsStr[i]^secret[pos % 4093];
+    }
+    *(u_int *)(buf+112)=htonl(random_num);
+
+    dataSend(buf,116);
+
+    string logStr = "发送" + to_string(116) + "字节";
+    logWrite(LocalLogPath, 0, logStr, nullptr, 0);
+
+    logStr ="(发送数据为：)";
+    logWrite(LocalLogPath, 1, logStr, buf, 116);
+
     return 0;
 }

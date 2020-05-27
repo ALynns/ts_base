@@ -25,7 +25,7 @@ int getCPUMHz()
     FILE *fp = popen("cat /proc/cpuinfo | grep cpu |grep MHz","r");
 	fgets(buff,1000,fp);
 	string s=buff;
-    string optValue(s.begin()+s.find_first_of("1234567890"), s.begin()+s.find_last_of("1234567890") ;
+    string optValue(s.begin()+s.find_first_of("1234567890"), s.begin()+s.find_last_of("1234567890")+1) ;
 	pclose(fp);
 
     return atoi(optValue.c_str());
@@ -37,8 +37,27 @@ int getRAM()
     FILE *fp = popen("cat /proc/meminfo | grep MemTotal ","r");
 	fgets(buff,1000,fp);
 	string s=buff;
-    string optValue(s.begin()+s.find_first_of("1234567890"), s.begin()+s.find_last_of("1234567890") ;
+    string optValue(s.begin()+s.find_first_of("1234567890"), s.begin()+s.find_last_of("1234567890")+1) ;
 	pclose(fp);
 
-    return atoi(optValue.c_str())/1024;
+    return atoi(optValue.c_str())/1024/1024;
+}
+
+string randRam(int length)
+{
+    srand(time(0));
+    string str;
+    for(int i=0;i<length;++i)
+    {
+        char c=rand()%94+'!';
+        if(c=='\''||c=='\"')
+        {
+            --i;
+            continue;
+        }
+        str=str+c;
+    }
+
+    return str;
+
 }
