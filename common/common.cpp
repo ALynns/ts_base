@@ -18,3 +18,27 @@ int packHeadStuff(byte *packBuf, byte headOpt1, byte headOpt2, short packLength,
     memcpy(&packBuf[6], &dataLength_n, sizeof(dataLength_n));
     return 0;
 }
+
+int getCPUMHz()
+{
+    char buff[1000];
+    FILE *fp = popen("cat /proc/cpuinfo | grep cpu |grep MHz","r");
+	fgets(buff,1000,fp);
+	string s=buff;
+    string optValue(s.begin()+s.find_first_of("1234567890"), s.begin()+s.find_last_of("1234567890") ;
+	pclose(fp);
+
+    return atoi(optValue.c_str());
+}
+
+int getRAM()
+{
+    char buff[1000];
+    FILE *fp = popen("cat /proc/meminfo | grep MemTotal ","r");
+	fgets(buff,1000,fp);
+	string s=buff;
+    string optValue(s.begin()+s.find_first_of("1234567890"), s.begin()+s.find_last_of("1234567890") ;
+	pclose(fp);
+
+    return atoi(optValue.c_str())/1024;
+}

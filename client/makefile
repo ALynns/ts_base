@@ -8,7 +8,7 @@ head = $(commonPath)/*.h $(clientPath)/*.h
 cppFile = $(commonPath)/*.cpp $(clientPath)/*.cpp 
 
 .PHONY : all clean
-all : $(object)
+all : clean $(object)
 
 client : 
 	g++ -o $(object) -Wall -std=c++11 $(head) $(cppFile)

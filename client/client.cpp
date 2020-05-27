@@ -13,19 +13,24 @@ int client::clientMain()
     {
         short fail_reConnnectSec = 0, succ_reConnnectSec = 0;
         closeFlag = 0;
-        this->localBind();
+        localBind();
         while (!closeFlag)
         {
-            int packType = this->packAnalysis(buf);
+            int packType = packAnalysis(buf);
             if (packType == PACK_IDS_REQ_S)
             {
                 int ret;
                 fail_reConnnectSec = ntohs(*(short *)(buf + 12));
                 succ_reConnnectSec = ntohs(*(short *)(buf + 14));
+
                 ret = identity(buf);
                 if (ret == -1)
                 {
                     closeFlag = 1;
+                }
+                else
+                {
+                    idsAns();
                 }
                 break;
             }
@@ -302,7 +307,7 @@ int client::identity(byte buf[])
     u_char ver2 = *(buf + 10);
     u_char ver3 = *(buf + 11);
 
-    logStr="版本号"+to_string(ver1)+"."+to_string(ver1)+"."+to_string(ver1);
+    logStr="版本号"+to_string(ver1)+"."+to_string(ver2)+"."+to_string(ver3);
     logWrite(LocalLogPath, 0, logStr.c_str(), nullptr, 0);
     if (ver1 < 2)
     {
@@ -313,11 +318,12 @@ int client::identity(byte buf[])
         return -1;
     }
 
-    time_t svr_time = (time_t)ntohs(*(int *)(buf + 56)) ^ (u_int)(0xFFFFFFFF);
+    time_t svr_time = (time_t)ntohl((*(u_int *)(buf + 56))^ (u_int)(0xFFFFFFFF)) ;
     struct tm *st;
     st = localtime(&svr_time);
+    
 
-    logStr="服务器时间:"+to_string(st->tm_year + 1900)+"-"+to_string(st->tm_mon)+"-"+to_string(st->tm_mday)+" "+to_string(st->tm_hour)+"."+to_string(st->tm_min)+"."+to_string(st->tm_sec);
+    logStr="服务器时间:"+to_string(st->tm_year + 1900)+"-"+to_string(st->tm_mon)+"-"+to_string(st->tm_mday)+" "+to_string(st->tm_hour)+":"+to_string(st->tm_min)+":"+to_string(st->tm_sec);
     logWrite(LocalLogPath, 0, logStr.c_str(), nullptr, 0);
     if(st->tm_year + 1900 < 2017)
     {
@@ -329,7 +335,7 @@ int client::identity(byte buf[])
     }
 
     char encryptedStr[32];
-    u_int random_num = ntohs(*(int *)(buf + 52));
+    u_int random_num = ntohl(*(u_int *)(buf + 52));
     memcpy(encryptedStr, buf + 20, 32);
     int pos = random_num % 4093;
     for (int i = 0; i < 32; ++i, ++pos)
@@ -337,14 +343,18 @@ int client::identity(byte buf[])
         encryptedStr[i] = encryptedStr[i] ^ secret[pos % 4093];
     }
     string r_s = encryptedStr;
+    cout<<r_s<<endl;
     if(r_s==IdsStr)
     {
+        logStr="认证成功";
+        cout<<logStr<<endl;
         logWrite(LocalLogPath, 0, "认证成功", nullptr, 0);
         return 0;
     }
     else
     {
-        cout << "认证非法" << endl;
+        logStr="认证非法";
+        cout << logStr << endl;
         logWrite(LocalLogPath, 0, "认证非法", nullptr, 0);
         closeFlag = 1;
         return -1;
@@ -370,13 +380,11 @@ int client::minimumVerReq()
 
 int client::idsAns()
 {
-    /*byte buf[116] = {0};
+    byte buf[116] = {0};
     packHeadStuff(buf,0x91,0x01,116,0x0000,108);
-    FILE *fp = popen("cat /proc/cpuinfo | grep cpu |grep MHz","r");
-	byte buff[1000];
-	fgets(buff,1000,fp);
-	printf("%s",buff);
-	pclose(fp);
-    return 0;*/
+
+    short cpuMhz=(short)getCPUMHz();
+    short ram=(short)getRAM();
+    
     return 0;
 }
