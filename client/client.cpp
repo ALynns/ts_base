@@ -8,6 +8,7 @@ extern map<short, int> ClientPackType;
 
 int client::clientMain()
 {
+    srand(time(0));
     byte buf[1000];
     while(1)
     {
@@ -41,72 +42,84 @@ int client::clientMain()
         while (!closeFlag)
         {
             memset(buf,0,1000);
-            int packType = this->packAnalysis(buf);
+            int packType = packAnalysis(buf);
             switch (packType)
             {
-            case PACK_SYS_INFO_REQ_S:
-            {
-                break;
-            }
-            case PACK_CONF_INFO_REQ_S:
-            {
-                break;
-            }
-            case PACK_PROC_INFO_REQ_S:
-            {
-                break;
-            }
-            case PACK_ETH_PORT_INFO_REQ_S:
-            {
-                break;
-            }
-            case PACK_FLASH_INFO_REQ_S:
-            {
-                break;
-            }
-            case PACK_PRINT_PORT_INFO_REQ_S:
-            {
-                break;
-            }
-            case PACK_TTY_SER_INFO_REQ_S:
-            {
-                break;
-            }
-            case PACK_TTY_INFO_REQ_S:
-            {
-                break;
-            }
-            case PACK_IP_TTY_INFO_REQ_S:
-            {
-                break;
-            }
-            case PACK_FLASH_FILE_INFO_REQ_S:
-            {
-                break;
-            }
-            case PACK_PRINT_QUE_INFO_REQ_S:
-            {
-                break;
-            }
-            case PACK_DISCON_REQ_S:
-            {
-                break;
-            }
+                case PACK_SYS_INFO_REQ_S:
+                {
+                    sysInfoAns();
+                    break;
+                }
+                case PACK_CONF_INFO_REQ_S:
+                {
+                    configAns();
+                    break;
+                }
+                case PACK_PROC_INFO_REQ_S:
+                {
+                    procInfoAns();
+                    break;
+                }
+                case PACK_ETH_PORT_INFO_REQ_S:
+                {
+                    ethInfoAns(*((short*)(buf+4)));
+                    break;
+                }
+                case PACK_FLASH_INFO_REQ_S:
+                {
+                    usbInfoAns();
+                    break;
+                }
+                case PACK_PRINT_PORT_INFO_REQ_S:
+                {
+                    break;
+                }
+                case PACK_TTY_SER_INFO_REQ_S:
+                {
+                    break;
+                }
+                case PACK_TTY_INFO_REQ_S:
+                {
+                    break;
+                }
+                case PACK_IP_TTY_INFO_REQ_S:
+                {
+                    break;
+                }
+                case PACK_FLASH_FILE_INFO_REQ_S:
+                {
+                    usbFileInfoAns();
+                    break;
+                }
+                case PACK_PRINT_QUE_INFO_REQ_S:
+                {
+                    break;
+                }
+                case PACK_DISCON_REQ_S:
+                {
+                    break;
+                }
 
-            default:
-                break;
+                default:
+                    break;
             }
         }
 
-        /*if (closeFlag)
+        break;
+        if (closeFlag)
         {
             close(socketfd);
             if (closeFlag == 1)
+            {
                 sleep(fail_reConnnectSec);
+                continue;
+            }    
             else
+            {
                 sleep(succ_reConnnectSec);
-            continue;
-        }*/
+                continue;
+            }
+        }
         break;
     }
     return 0;
@@ -220,6 +233,8 @@ void client::dataSend(const byte *sendBuf, int sendBufSize)
 
 void client::dataRecv(byte *recvBuf,int recvSize)
 {
+    if(!recvSize)
+        return ;
     int ret;
 
     fd_set fdsr;
@@ -349,16 +364,16 @@ int client::identity(byte buf[])
     string r_s = encryptedStr;
     if(r_s==IdsStr)
     {
-        logStr="认证成功";
+        logStr="本地认证成功";
         cout<<logStr<<endl;
-        logWrite(LocalLogPath, 0, "认证成功", nullptr, 0);
+        logWrite(LocalLogPath, 0, logStr, nullptr, 0);
         return 0;
     }
     else
     {
-        logStr="认证非法";
+        logStr="本地认证非法";
         cout << logStr << endl;
-        logWrite(LocalLogPath, 0, "认证非法", nullptr, 0);
+        logWrite(LocalLogPath, 0, logStr, nullptr, 0);
         closeFlag = 1;
         return -1;
     }
@@ -396,11 +411,11 @@ int client::idsAns()
 
     *(short *)(buf+14)=htons((short)(1));//内部序列号
 
-    memcpy((buf+16),randRam(16).c_str(),16);//组序列号
+    memcpy((buf+16),randStr(16).c_str(),16);//组序列号
 
-    memcpy((buf+32),randRam(16).c_str(),16);//设备型号
+    memcpy((buf+32),randStr(16).c_str(),16);//设备型号
 
-    memcpy((buf+48),randRam(16).c_str(),16);//软件版本号
+    memcpy((buf+48),randStr(16).c_str(),16);//软件版本号
 
     *(buf+64)=rand()%3;//以太口数量
 
@@ -418,12 +433,16 @@ int client::idsAns()
 
     *(buf+76)=1;
 
+    memcpy(buf+80,IdsStr.c_str(),32);
+
     u_int random_num=(u_int)rand(); 
-    int pos=random_num%4093;
-    for(int i=0;i<32;++i,++pos)
+    int pos = random_num % 4093;
+    for(int i=0;i<104;++i,++pos)
     {
-        buf[80+i]=IdsStr[i]^secret[pos % 4093];
+        buf[8+i]=buf[8+i]^secret[pos % 4093];
     }
+
+
     *(u_int *)(buf+112)=htonl(random_num);
 
     dataSend(buf,116);
@@ -435,4 +454,260 @@ int client::idsAns()
     logWrite(LocalLogPath, 1, logStr, buf, 116);
 
     return 0;
+}
+
+int client::sysInfoAns()
+{
+    byte buf[28]={0};
+    packHeadStuff(buf,0x91,0x02,28,0x0000,20);
+    fstream fs1("/proc/stat",ios::in);
+    string tp;
+    getline(fs1,tp);
+    int v1,v2,v3,v4;
+    
+    size_t pos=0;
+    pos=tp.find_first_of("0123456789");
+    v1=atoi(&(tp.c_str()[pos]));
+    pos=tp.find_first_not_of("0123456789",pos);
+    pos=tp.find_first_of("0123456789",pos);
+    v2=atoi(&(tp.c_str()[pos]));
+    pos=tp.find_first_not_of("0123456789",pos);
+    pos=tp.find_first_of("0123456789",pos);
+    v3=atoi(&(tp.c_str()[pos]));
+    pos=tp.find_first_not_of("0123456789",pos);
+    pos=tp.find_first_of("0123456789",pos);
+    v4=atoi(&(tp.c_str()[pos]));
+
+    int freed_mem=0;
+    fstream fs2("/proc/meminfo",ios::in);
+    getline(fs2,tp);
+    getline(fs2,tp);
+    pos=tp.find_first_of("0123456789");
+    freed_mem=atoi(&(tp.c_str()[pos]));
+    getline(fs2,tp);
+    getline(fs2,tp);
+    pos=tp.find_first_of("0123456789");
+    freed_mem=freed_mem+atoi(&(tp.c_str()[pos]));
+    getline(fs2,tp);
+    pos=tp.find_first_of("0123456789");
+    freed_mem=freed_mem+atoi(&(tp.c_str()[pos]));
+
+    *(int *)(buf+8)=htonl(v1);
+    *(int *)(buf+12)=htonl(v2);
+    *(int *)(buf+16)=htonl(v3);
+    *(int *)(buf+20)=htonl(v4);
+    *(int *)(buf+24)=htonl(freed_mem);
+
+    dataSend(buf,28);
+
+    string logStr = "发送" + to_string(28) + "字节";
+    logWrite(LocalLogPath, 0, logStr, nullptr, 0);
+
+    logStr ="(发送数据为：)";
+    logWrite(LocalLogPath, 1, logStr, buf, 28);
+
+    return 0;
+}
+
+int client::configAns()
+{
+    int maxFileLength=8192;
+    byte buf[10000]={0};
+    string bufData="";
+
+    fstream fs("config.dat",ios::in|ios::out);
+
+    if(!fs)
+        cout<<"未读取到配置信息"<<endl;
+    while (!fs.eof())
+    {
+        string tp;
+        getline(fs,tp);
+        bufData=bufData+tp;
+        if((int)(bufData.size())>maxFileLength)
+            break;
+    }
+
+    int length=bufData.size()>8192?8192:bufData.size();
+    memcpy(buf+8,bufData.c_str(),length);
+    buf[8191+8]=0;
+
+    packHeadStuff(buf,0x91,0x03,length+8,0x0000,length);
+    dataSend(buf,length+8);
+    string logStr = "发送" + to_string(length+8) + "字节";
+    logWrite(LocalLogPath, 0, logStr, nullptr, 0);
+
+    logStr ="(发送数据为：)";
+    logWrite(LocalLogPath, 1, logStr, buf, length+8);
+
+    return 0;
+}
+
+int client::procInfoAns()
+{
+    int maxFileLength=8192;
+    byte buf[10000]={0};
+    string bufData="";
+    
+    fstream fs("process.dat",ios::in|ios::out);
+
+    if(!fs)
+        cout<<"未读取到配置信息"<<endl;
+    while (!fs.eof())
+    {
+        string tp;
+        getline(fs,tp);
+        bufData=bufData+tp;
+        if((int)(bufData.size())>maxFileLength)
+            break;
+    }
+
+    int length=bufData.size()>8192?8192:bufData.size();
+    memcpy(buf+8,bufData.c_str(),length);
+    buf[8191+8]=0;
+
+    packHeadStuff(buf,0x91,0x04,length+8,0x0000,length);
+
+    dataSend(buf,length+8);
+    string logStr = "发送" + to_string(length+8) + "字节";
+    logWrite(LocalLogPath, 0, logStr, nullptr, 0);
+
+    logStr ="(发送数据为：)";
+    logWrite(LocalLogPath, 1, logStr, buf, length+8);
+
+
+    return 0;
+}
+
+int client::ethInfoAns(short eth)
+{
+    byte buf[132]={0};
+    packHeadStuff(buf,0x91,0x05,132,htons(eth),124);
+    *(buf+8)=rand()%2;
+    *(buf+9)=rand()%2;
+    *(buf+10)=rand()%2;
+
+    *(buf+12)=rand()%256;
+    *(buf+13)=rand()%256;
+    *(buf+14)=rand()%256;
+    *(buf+15)=rand()%256;
+    *(buf+16)=rand()%256;
+    *(buf+17)=rand()%256;
+
+    *(short *)(buf+18)=rand()%8;
+
+    *(int *)(buf+20)=htonl(rand());//ip
+    *(int *)(buf+24)=htonl(rand());
+    *(int *)(buf+28)=htonl(rand());//ip 1
+    *(int *)(buf+32)=htonl(rand());
+    *(int *)(buf+36)=htonl(rand());//ip2
+    *(int *)(buf+40)=htonl(rand());
+    *(int *)(buf+44)=htonl(rand());//ip3
+    *(int *)(buf+48)=htonl(rand());
+    *(int *)(buf+52)=htonl(rand());//ip4
+    *(int *)(buf+56)=htonl(rand());
+    *(int *)(buf+60)=htonl(rand());//ip5
+    *(int *)(buf+64)=htonl(rand());
+
+    string ethInfo;
+    if(!eth)
+        ethInfo=getEth("ens");
+    else
+        ethInfo=getEth("lo");
+
+    int i=0;
+    size_t pos=ethInfo.find_first_of(":");;
+    for(;i<16;++i)
+    {
+        pos=ethInfo.find_first_of("0123456789",pos);
+        *(int *)(buf+68+i*4)=htonl(atoi(&(ethInfo.c_str()[pos])));
+        pos=ethInfo.find_first_not_of("0123456789",pos);
+    }
+
+    dataSend(buf,132);
+
+    string logStr = "发送" + to_string(132) + "字节";
+    logWrite(LocalLogPath, 0, logStr, nullptr, 0);
+
+    logStr ="(发送数据为：)";
+    logWrite(LocalLogPath, 1, logStr, buf, 132);
+
+    return 0;
+}
+
+int client::usbInfoAns()
+{
+    byte buf[12]={0};
+    packHeadStuff(buf,0x91,0x07,12,0x0000,4);
+    *(buf+8)=rand()%2;
+
+    dataSend(buf,12);
+
+    string logStr = "发送" + to_string(12) + "字节";
+    logWrite(LocalLogPath, 0, logStr, nullptr, 0);
+
+    logStr ="(发送数据为：)";
+    logWrite(LocalLogPath, 1, logStr, buf, 12);
+
+    return 0;
+}
+
+int client::usbFileInfoAns()
+{
+    int maxFileLength=4096;
+    byte buf[10000]={0};
+    string bufData="";
+    
+    fstream fs("usbfiles.dat",ios::in|ios::out);
+
+    if(!fs)
+        cout<<"未读取到配置信息"<<endl;
+    while (!fs.eof())
+    {
+        string tp;
+        getline(fs,tp);
+        bufData=bufData+tp;
+        if((int)(bufData.size())>maxFileLength)
+            break;
+    }
+
+    int length=bufData.size()>maxFileLength?maxFileLength:bufData.size();
+    memcpy(buf+8,bufData.c_str(),length);
+    buf[8191+8]=0;
+
+    packHeadStuff(buf,0x91,0x0c,length+8,0x0000,length);
+
+    dataSend(buf,length+8);
+    string logStr = "发送" + to_string(length+8) + "字节";
+    logWrite(LocalLogPath, 0, logStr, nullptr, 0);
+
+    logStr ="(发送数据为：)";
+    logWrite(LocalLogPath, 1, logStr, buf, length+8);
+
+
+    return 0;
+}
+
+int client::printPortAns()
+{
+    byte buf[44]={0};
+    packHeadStuff(buf,0x91,0x08,44,0x0000,36);
+    string str=randStr(32);
+    *(buf+8)=rand()%2;
+    *(short *)(buf+10)=htonl(rand());
+
+    memcpy(buf+12,str.c_str(),32);
+
+    dataSend(buf,44);
+
+    string logStr = "发送" + to_string(44) + "字节";
+    logWrite(LocalLogPath, 0, logStr, nullptr, 0);
+
+    logStr ="(发送数据为：)";
+    logWrite(LocalLogPath, 1, logStr, buf, 44);
+}
+
+int client::printQueAns()
+{
+
 }

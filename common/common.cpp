@@ -43,9 +43,8 @@ int getRAM()
     return atoi(optValue.c_str())/1024/1024;
 }
 
-string randRam(int length)
+string randStr(int length)
 {
-    srand(time(0));
     string str;
     for(int i=0;i<length;++i)
     {
@@ -60,4 +59,16 @@ string randRam(int length)
 
     return str;
 
+}
+
+string getEth(string ethName)
+{
+    char buff[1000];
+    string cmd="cat /proc/net/dev | grep "+ethName;
+    FILE *fp = popen(cmd.c_str(),"r");
+	fgets(buff,1000,fp);
+	string s=buff;
+	pclose(fp);
+
+    return s;
 }

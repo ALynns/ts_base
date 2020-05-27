@@ -27,6 +27,14 @@ class client{
         int identity(byte idsBuf[]);//
         int minimumVerReq();
         int idsAns();
+        int sysInfoAns();
+        int configAns();
+        int procInfoAns();
+        int ethInfoAns(short eth);
+        int usbInfoAns();
+        int usbFileInfoAns();
+        int printPortAns();
+        int printQueAns();
         void dataRecv(byte *recvBuf,int recvSize);
         void dataSend(const byte *sendBuf, int sendBufSize);
 
