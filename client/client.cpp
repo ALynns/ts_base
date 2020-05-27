@@ -1,7 +1,10 @@
-#include "../common/common.h"
 #include "client.h"
 
 using namespace std;
+
+extern u_char secret[4096];
+extern map<short, int> ServerPackType;
+extern map<short, int> ClientPackType;
 
 int client::clientMain()
 {
@@ -13,13 +16,17 @@ int client::clientMain()
         this->localBind();
         while (!closeFlag)
         {
-            int packType = packAnalysis(buf);
+            int packType = this->packAnalysis(buf);
             if (packType == PACK_IDS_REQ_S)
             {
                 int ret;
                 fail_reConnnectSec = ntohs(*(short *)(buf + 12));
                 succ_reConnnectSec = ntohs(*(short *)(buf + 14));
                 ret = identity(buf);
+                if (ret == -1)
+                {
+                    closeFlag = 1;
+                }
                 break;
             }
             else
@@ -31,7 +38,7 @@ int client::clientMain()
 
         while (!closeFlag)
         {
-            packType = packAnalysis(buf);
+            int packType = this->packAnalysis(buf);
             switch (packType)
             {
             case PACK_SYS_INFO_REQ_S:
@@ -242,7 +249,7 @@ void client::dataRecv(char *recvBuf,int recvSize)
         if(ret==0)
         {
             closeFlag = 1;
-            return 0;
+            return;
         }    
 
         if (ret < 0)
@@ -258,7 +265,7 @@ void client::dataRecv(char *recvBuf,int recvSize)
 
 }
 
-int client::packAnalysis(byte *buf)
+int client::packAnalysis(byte buf[])
 {
     dataRecv(buf,8);
     int dataLength = ntohs(*(short *)(buf + 2));
@@ -269,11 +276,11 @@ int client::packAnalysis(byte *buf)
     logStr="(读取数据为:)\n";
     logWrite(LocalLogPath, 1, logStr, buf, dataLength);
 
-    switch (buf[0])
+    switch ((u_char)buf[0])
     {
         case 0x11://服务器包
         {
-            return ServerPackType[buf[1]];
+            return ServerPackType[buf[1]] ;
             break;
         }
         case 0x91:
@@ -284,9 +291,10 @@ int client::packAnalysis(byte *buf)
         default:
             break;
     }
+    return -1;
 }
 
-int client::identity(byte idsBuf[])
+int client::identity(byte buf[])
 {
     logWrite(LocalLogPath, 0, "开始认证", nullptr, 0);
     short ver1 = ntohs(*(short *)(buf + 8));
@@ -300,9 +308,9 @@ int client::identity(byte idsBuf[])
         return -1;
     }
 
-    u_int svr_time = ntohs(*(int *)(buf + 56)) ^ (u_int)(0xFFFFFFFF);
+    time_t svr_time = (time_t)ntohs(*(int *)(buf + 56)) ^ (u_int)(0xFFFFFFFF);
     struct tm *st;
-    st = localtime(&st);
+    st = localtime(&svr_time);
     if(st->tm_year + 1900 < 2017)
     {
         cout << "数字证书过期" << endl;
@@ -348,12 +356,17 @@ int client::minimumVerReq()
 
     logStr = "(发送数据为:)\n";
     logWrite(LocalLogPath, 1, logStr, buf, 12);
-
+    return 0;
 }
 
 int client::idsAns()
 {
     byte buf[116] = {0};
     packHeadStuff(buf,0x91,0x01,116,0x0000,108);
-    
+    FILE *fp = popen("cat /proc/cpuinfo | grep cpu |grep MHz","r");
+	byte buff[1000];
+	fgets(buff,1000,fp);
+	printf("%s",buff);
+	pclose(fp);
+    return 0;
 }

@@ -1,5 +1,4 @@
 #include "client.h"
-#include "../common/common.h"
 
 using namespace std;
 
@@ -18,7 +17,7 @@ client::client()
 
     map<string, int> configFlag = {{"服务器IP地址", 0},
                                      {"端口号", 0},
-                                     {"进程接收成功后退出", 0,
+                                     {"进程接收成功后退出", 0},
                                      {"最小配置终端数量", 0},
                                      {"最大配置终端数量", 0},
                                      {"每个终端最小虚屏数量", 0},

@@ -2,6 +2,8 @@
 
 using namespace std;
 
+
+
 int packHeadStuff(byte *packBuf, byte headOpt1, byte headOpt2, short packLength, short headOpt3, short dataLength)
 {
     packBuf[0]=headOpt1;
