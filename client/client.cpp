@@ -77,14 +77,17 @@ int client::clientMain()
                 }
                 case PACK_TTY_SER_INFO_REQ_S:
                 {
+                    ttySerInfoAns();
                     break;
                 }
                 case PACK_TTY_INFO_REQ_S:
                 {
+                    ttyInfoAns(0x0a,ntohs(*(short *)(buf+4)));
                     break;
                 }
                 case PACK_IP_TTY_INFO_REQ_S:
                 {
+                    ttyInfoAns(0x0b,ntohs(*(short *)(buf+4)));
                     break;
                 }
                 case PACK_FLASH_FILE_INFO_REQ_S:
@@ -99,6 +102,7 @@ int client::clientMain()
                 }
                 case PACK_DISCON_REQ_S:
                 {
+                    disconAns();
                     break;
                 }
 
@@ -106,7 +110,6 @@ int client::clientMain()
                     break;
             }
         }
-
         break;
         if (closeFlag)
         {
@@ -118,11 +121,15 @@ int client::clientMain()
             }    
             else
             {
-                sleep(succ_reConnnectSec);
-                continue;
+                if(exitOpt)
+                {
+                    sleep(succ_reConnnectSec);
+                    continue;
+                }
+                else
+                    break;
             }
         }
-        break;
     }
     return 0;
 }
@@ -387,7 +394,7 @@ int client::minimumVerReq()
 {
     byte buf[12] = {0};
     packHeadStuff(buf,0x91,0x00,12,0x0000,4);
-    *(short *)(buf + 8) = 2;
+    *(short *)(buf + 8) = htons(2);
     dataSend(buf, 12);
 
     string logStr = "发送" + to_string(12) + "字节";
@@ -596,7 +603,7 @@ int client::ethInfoAns(short eth)
     *(buf+16)=rand()%256;
     *(buf+17)=rand()%256;
 
-    *(short *)(buf+18)=rand()%8;
+    *(short *)(buf+18)=htons(rand()%8);
 
     *(int *)(buf+20)=htonl(rand());//ip
     *(int *)(buf+24)=htonl(rand());
@@ -659,7 +666,7 @@ int client::usbFileInfoAns()
     int maxFileLength=4096;
     byte buf[10000]={0};
     string bufData="";
-    
+
     fstream fs("usbfiles.dat",ios::in|ios::out);
 
     if(!fs)
@@ -673,12 +680,11 @@ int client::usbFileInfoAns()
             break;
     }
 
-    int length=bufData.size()>maxFileLength?maxFileLength:bufData.size();
+    int length=(int)(bufData.size())>8192?8192:bufData.size();
     memcpy(buf+8,bufData.c_str(),length);
     buf[8191+8]=0;
 
     packHeadStuff(buf,0x91,0x0c,length+8,0x0000,length);
-
     dataSend(buf,length+8);
     string logStr = "发送" + to_string(length+8) + "字节";
     logWrite(LocalLogPath, 0, logStr, nullptr, 0);
@@ -707,22 +713,23 @@ int client::printPortAns()
 
     logStr ="(发送数据为：)";
     logWrite(LocalLogPath, 1, logStr, buf, 44);
+    return 0;
 }
 
 int client::printQueAns()
 {
-    byte buf[40]={0};
-    packHeadStuff(buf,0x91,0x0d,40,0x0000,32);
-    
-    memcpy(buf+8,randStr(32).c_str(),32);
+    byte buf[9]={0};
+    packHeadStuff(buf,0x91,0x0d,9,0x0000,1);
 
-    dataSend(buf,44);
+    dataSend(buf,9);
 
-    string logStr = "发送" + to_string(44) + "字节";
+    string logStr = "发送" + to_string(9) + "字节";
     logWrite(LocalLogPath, 0, logStr, nullptr, 0);
 
     logStr ="(发送数据为：)";
-    logWrite(LocalLogPath, 1, logStr, buf, 44);
+    logWrite(LocalLogPath, 1, logStr, buf, 9);
+
+    return 0;
 }
 
 int client::ttySerInfoAns()
@@ -739,7 +746,7 @@ int client::ttySerInfoAns()
 
     while(async_term_num)
     {
-        int r=rand()%16;
+        int r=rand()%asyNum;
         if(*(buf+8+r))
             continue;
         else
@@ -761,18 +768,104 @@ int client::ttySerInfoAns()
         }
     }
 
-    *(short *)(buf+278)=rand()%(270-total)+total;
+    *(short *)(buf+278)=htons(rand()%(270-total)+total);
 
+    dataSend(buf,280);
 
     string logStr = "发送" + to_string(280) + "字节";
     logWrite(LocalLogPath, 0, logStr, nullptr, 0);
 
     logStr ="(发送数据为：)";
     logWrite(LocalLogPath, 1, logStr, buf, 280);
+
+    return 0;
 }
 
 
-int client::ttyInfoAns(short ttyType)
+int client::ttyInfoAns(short ttyType,short devid)
 {
+    const int everyScreenLength=96;
+    byte screenNum=rand()%(maxScrNum-minScrNum)+minScrNum;
+    byte buf[5000]={0};
 
+    if(ttyType == 0x0a)
+    {
+        *(int*)(buf+12)=0;
+        memcpy(buf+16,"串口终端",8);
+    }
+    else
+    {
+        *(int*)(buf+12)=htonl(rand());
+        rand()%2?memcpy(buf+16,"IP终端",6):memcpy(buf+16,"IP代理",6);
+    }
+
+    packHeadStuff(buf,0x91,ttyType,36+everyScreenLength*screenNum,devid,28+everyScreenLength*screenNum);
+
+    *(buf+8)=devid;
+    *(buf+9)=devid;
+    *(buf+10)=rand()%screenNum+1;
+    *(buf+11)=screenNum;
+    rand()%2?memcpy(buf+28,"正常",4):memcpy(buf+28,"菜单",4);
+
+    byte *screen=buf+36;
+    int screenNoSet[16]={0};
+
+    for(int i=0;i<screenNum;++i,screen=screen+everyScreenLength)
+    {
+        while(1)
+        {
+            int screenNo=rand()%screenNum+1;
+            if(screenNoSet[screenNo])
+                continue;
+            *screen=screenNo;
+            screenNoSet[screenNo]=1;
+            break;
+
+        }
+        *(short *)(screen+2)=htons(rand());
+        *(int *)(screen+4)=htonl(rand());
+        rand()%2?memcpy(screen+8,"SSH",3):memcpy(screen+8,"专用SSH",7);
+        memcpy(screen+20,"已登录",6);
+        memcpy(screen+28,"储蓄系统",8);
+        memcpy(screen+52,"vt100",5);
+        *(int *)(screen+64)=htonl((int)time(0));
+        *(int *)(screen+68)=htonl(rand());
+        *(int *)(screen+72)=htonl(rand());
+        *(int *)(screen+76)=htonl(rand());
+        *(int *)(screen+80)=htonl(rand());
+        *(int *)(screen+84)=htonl(rand()%123457);
+        *(int *)(screen+88)=htonl(rand()%123457);
+        *(int *)(screen+92)=htonl(rand()%123457);
+    }
+
+    dataSend(buf,36+everyScreenLength*screenNum);
+
+    string logStr = "发送" + to_string(36+everyScreenLength*screenNum) + "字节";
+    logWrite(LocalLogPath, 0, logStr, nullptr, 0);
+
+    logStr ="(发送数据为：)";
+    logWrite(LocalLogPath, 1, logStr, buf, 36+everyScreenLength*screenNum);
+
+    return 0;
+}
+
+int client::disconAns()
+{
+    byte buf[8];
+    packHeadStuff(buf,0x91,0xff,8,0x0000,0);
+
+    dataSend(buf,8);
+
+    string logStr = "发送" + to_string(8) + "字节";
+    logWrite(LocalLogPath, 0, logStr, nullptr, 0);
+
+    logStr ="(发送数据为：)";
+    logWrite(LocalLogPath, 1, logStr, buf, 8);
+
+    logStr = "数据发送完毕,断开连接";
+    logWrite(LocalLogPath, 0, logStr, nullptr, 0);
+
+    closeFlag=2;
+
+    return 0;
 }

@@ -37,7 +37,8 @@ class client{
         int printPortAns();
         int printQueAns();
         int ttySerInfoAns();
-        int ttyInfoAns(short ttyType);
+        int ttyInfoAns(short ttyType,short devid);
+        int disconAns();
         void dataRecv(byte *recvBuf,int recvSize);
         void dataSend(const byte *sendBuf, int sendBufSize);
 
