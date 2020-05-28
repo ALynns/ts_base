@@ -72,6 +72,7 @@ int client::clientMain()
                 }
                 case PACK_PRINT_PORT_INFO_REQ_S:
                 {
+                    printPortAns();
                     break;
                 }
                 case PACK_TTY_SER_INFO_REQ_S:
@@ -93,6 +94,7 @@ int client::clientMain()
                 }
                 case PACK_PRINT_QUE_INFO_REQ_S:
                 {
+                    printQueAns();
                     break;
                 }
                 case PACK_DISCON_REQ_S:
@@ -421,7 +423,7 @@ int client::idsAns()
 
     *(buf+65)=rand()%3;//同步口数量
 
-    *(buf+66)=rand()%3*8;//异步口数量
+    *(buf+66)=(asyNum=rand()%3*8);//异步口数量
 
     *(buf+67)=rand()%4*8;//交换口数量
 
@@ -708,6 +710,69 @@ int client::printPortAns()
 }
 
 int client::printQueAns()
+{
+    byte buf[40]={0};
+    packHeadStuff(buf,0x91,0x0d,40,0x0000,32);
+    
+    memcpy(buf+8,randStr(32).c_str(),32);
+
+    dataSend(buf,44);
+
+    string logStr = "发送" + to_string(44) + "字节";
+    logWrite(LocalLogPath, 0, logStr, nullptr, 0);
+
+    logStr ="(发送数据为：)";
+    logWrite(LocalLogPath, 1, logStr, buf, 44);
+}
+
+int client::ttySerInfoAns()
+{
+    byte buf[280]={0};
+
+    int total=rand()%(maxDevNum-minDevNum)+minDevNum;
+    int async_term_num=rand()%asyNum+1;
+    if(total<async_term_num)
+        total=async_term_num;
+    int ipterm_num=total-async_term_num;
+
+    packHeadStuff(buf,0x91,0x09,280,0x0000,272);
+
+    while(async_term_num)
+    {
+        int r=rand()%16;
+        if(*(buf+8+r))
+            continue;
+        else
+        {
+            *(buf+8+r)=1;
+            --async_term_num;
+        }
+    }
+
+    while(ipterm_num)
+    {
+        int r=rand()%254;
+        if(*(buf+8+16+r))
+            continue;
+        else
+        {
+            *(buf+8+16+r)=1;
+            --ipterm_num;
+        }
+    }
+
+    *(short *)(buf+278)=rand()%(270-total)+total;
+
+
+    string logStr = "发送" + to_string(280) + "字节";
+    logWrite(LocalLogPath, 0, logStr, nullptr, 0);
+
+    logStr ="(发送数据为：)";
+    logWrite(LocalLogPath, 1, logStr, buf, 280);
+}
+
+
+int client::ttyInfoAns(short ttyType)
 {
 
 }

@@ -18,6 +18,7 @@ class client{
         int debugOutput;
         int closeFlag;
         int socketfd;
+        int asyNum;
     public:
         client(int id);
         void infoPrint();
@@ -35,6 +36,8 @@ class client{
         int usbFileInfoAns();
         int printPortAns();
         int printQueAns();
+        int ttySerInfoAns();
+        int ttyInfoAns(short ttyType);
         void dataRecv(byte *recvBuf,int recvSize);
         void dataSend(const byte *sendBuf, int sendBufSize);
 
