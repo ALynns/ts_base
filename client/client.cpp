@@ -8,6 +8,10 @@ extern map<short, int> ClientPackType;
 
 int client::clientMain()
 {
+    if(logOpt)
+    {
+        system("rm *.log");
+    }
     srand(time(0));
     byte buf[1000];
     while(1)
@@ -47,61 +51,73 @@ int client::clientMain()
             {
                 case PACK_SYS_INFO_REQ_S:
                 {
+                    cout<<"收到对方获取系统信息请求"<<endl;
                     sysInfoAns();
                     break;
                 }
                 case PACK_CONF_INFO_REQ_S:
                 {
+                    cout<<"收到对方获取配置请求"<<endl;
                     configAns();
                     break;
                 }
                 case PACK_PROC_INFO_REQ_S:
                 {
+                    cout<<"收到对方获取进程信息请求"<<endl;
                     procInfoAns();
                     break;
                 }
                 case PACK_ETH_PORT_INFO_REQ_S:
                 {
+                    cout<<"收到对方获取网口信息请求"<<endl;
                     ethInfoAns(*((short*)(buf+4)));
                     break;
                 }
                 case PACK_FLASH_INFO_REQ_S:
                 {
+                    cout<<"收到对方获取U盘信息请求"<<endl;
                     usbInfoAns();
                     break;
                 }
                 case PACK_PRINT_PORT_INFO_REQ_S:
                 {
+                    cout<<"收到对方获取打印口信息请求"<<endl;
                     printPortAns();
                     break;
                 }
                 case PACK_TTY_SER_INFO_REQ_S:
                 {
+                    cout<<"收到对方获取终端服务器信息请求"<<endl;
                     ttySerInfoAns();
                     break;
                 }
                 case PACK_TTY_INFO_REQ_S:
                 {
+                    cout<<"收到对方获取哑终端信息请求"<<endl;
                     ttyInfoAns(0x0a,ntohs(*(short *)(buf+4)));
                     break;
                 }
                 case PACK_IP_TTY_INFO_REQ_S:
                 {
+                    cout<<"收到对方获取IP终端信息请求"<<endl;
                     ttyInfoAns(0x0b,ntohs(*(short *)(buf+4)));
                     break;
                 }
                 case PACK_FLASH_FILE_INFO_REQ_S:
                 {
+                    cout<<"收到对方获取U盘文件信息请求"<<endl;
                     usbFileInfoAns();
                     break;
                 }
                 case PACK_PRINT_QUE_INFO_REQ_S:
                 {
+                    cout<<"收到对方获取打印队列信息请求"<<endl;
                     printQueAns();
                     break;
                 }
                 case PACK_DISCON_REQ_S:
                 {
+                    cout<<"收到对方中断连接请求"<<endl;
                     disconAns();
                     break;
                 }
@@ -110,27 +126,30 @@ int client::clientMain()
                     break;
             }
         }
-        break;
         if (closeFlag)
         {
-            close(socketfd);
             if (closeFlag == 1)
             {
                 sleep(fail_reConnnectSec);
+                close(socketfd);
                 continue;
             }    
             else
             {
-                if(exitOpt)
+                if(!exitOpt)
                 {
                     sleep(succ_reConnnectSec);
                     continue;
                 }
                 else
+                {
+                    xlsWrite(devid,totalDevNum,totalScrNum);
                     break;
+                }
             }
         }
     }
+    close(socketfd);
     return 0;
 }
 
@@ -300,7 +319,10 @@ int client::packAnalysis(byte buf[])
 {
     dataRecv(buf,8);
     if(closeFlag==1)
+    {
+        cout<<"对方关闭了连接"<<endl;
         return 0;
+    }
     int dataLength = ntohs(*(short *)(buf + 2));
     dataRecv(buf + 8, dataLength - 8);
     string logStr="读取"+to_string(dataLength)+"字节";
@@ -330,6 +352,7 @@ int client::packAnalysis(byte buf[])
 int client::identity(byte buf[])
 {
     string logStr="开始认证";
+    cout<<logStr<<endl;
     logWrite(LocalLogPath, 0, logStr.c_str(), nullptr, 0);
     short ver1 = ntohs(*(short *)(buf + 8));
     u_char ver2 = *(buf + 10);
@@ -397,7 +420,11 @@ int client::minimumVerReq()
     *(short *)(buf + 8) = htons(2);
     dataSend(buf, 12);
 
-    string logStr = "发送" + to_string(12) + "字节";
+    string logStr = "发送最低版本信息";
+    cout<<logStr<<endl;
+    logWrite(LocalLogPath, 0, logStr, nullptr, 0);
+
+    logStr = "发送" + to_string(12) + "字节";
     logWrite(LocalLogPath, 0, logStr, nullptr, 0);
 
     logStr = "(发送数据为:)";
@@ -456,7 +483,11 @@ int client::idsAns()
 
     dataSend(buf,116);
 
-    string logStr = "发送" + to_string(116) + "字节";
+    string logStr = "发送认证信息与基本配置信息";
+    cout<<logStr<<endl;
+    logWrite(LocalLogPath, 0, logStr, nullptr, 0);
+
+    logStr = "发送" + to_string(116) + "字节";
     logWrite(LocalLogPath, 0, logStr, nullptr, 0);
 
     logStr ="(发送数据为：)";
@@ -509,7 +540,11 @@ int client::sysInfoAns()
 
     dataSend(buf,28);
 
-    string logStr = "发送" + to_string(28) + "字节";
+    string logStr = "发送系统信息";
+    cout<<logStr<<endl;
+    logWrite(LocalLogPath, 0, logStr, nullptr, 0);
+
+    logStr = "发送" + to_string(28) + "字节";
     logWrite(LocalLogPath, 0, logStr, nullptr, 0);
 
     logStr ="(发送数据为：)";
@@ -543,7 +578,12 @@ int client::configAns()
 
     packHeadStuff(buf,0x91,0x03,length+8,0x0000,length);
     dataSend(buf,length+8);
-    string logStr = "发送" + to_string(length+8) + "字节";
+
+    string logStr = "发送配置信息";
+    cout<<logStr<<endl;
+    logWrite(LocalLogPath, 0, logStr, nullptr, 0);
+
+    logStr = "发送" + to_string(length+8) + "字节";
     logWrite(LocalLogPath, 0, logStr, nullptr, 0);
 
     logStr ="(发送数据为：)";
@@ -561,7 +601,7 @@ int client::procInfoAns()
     fstream fs("process.dat",ios::in|ios::out);
 
     if(!fs)
-        cout<<"未读取到配置信息"<<endl;
+        cout<<"未读取到进程信息"<<endl;
     while (!fs.eof())
     {
         string tp;
@@ -578,7 +618,12 @@ int client::procInfoAns()
     packHeadStuff(buf,0x91,0x04,length+8,0x0000,length);
 
     dataSend(buf,length+8);
-    string logStr = "发送" + to_string(length+8) + "字节";
+
+    string logStr = "发送进程信息";
+    cout<<logStr<<endl;
+    logWrite(LocalLogPath, 0, logStr, nullptr, 0);
+
+    logStr = "发送" + to_string(length+8) + "字节";
     logWrite(LocalLogPath, 0, logStr, nullptr, 0);
 
     logStr ="(发送数据为：)";
@@ -635,7 +680,11 @@ int client::ethInfoAns(short eth)
 
     dataSend(buf,132);
 
-    string logStr = "发送" + to_string(132) + "字节";
+    string logStr = "发送网口信息";
+    cout<<logStr<<endl;
+    logWrite(LocalLogPath, 0, logStr, nullptr, 0);
+
+    logStr = "发送" + to_string(132) + "字节";
     logWrite(LocalLogPath, 0, logStr, nullptr, 0);
 
     logStr ="(发送数据为：)";
@@ -686,7 +735,12 @@ int client::usbFileInfoAns()
 
     packHeadStuff(buf,0x91,0x0c,length+8,0x0000,length);
     dataSend(buf,length+8);
-    string logStr = "发送" + to_string(length+8) + "字节";
+
+    string logStr = "发送U盘文件信息";
+    cout<<logStr<<endl;
+    logWrite(LocalLogPath, 0, logStr, nullptr, 0);
+
+    logStr = "发送" + to_string(length+8) + "字节";
     logWrite(LocalLogPath, 0, logStr, nullptr, 0);
 
     logStr ="(发送数据为：)";
@@ -700,15 +754,19 @@ int client::printPortAns()
 {
     byte buf[44]={0};
     packHeadStuff(buf,0x91,0x08,44,0x0000,36);
-    string str=randStr(32);
+    string str=randStr(4);
     *(buf+8)=rand()%2;
     *(short *)(buf+10)=htonl(rand());
 
-    memcpy(buf+12,str.c_str(),32);
+    memcpy(buf+12,str.c_str(),4);
 
     dataSend(buf,44);
 
-    string logStr = "发送" + to_string(44) + "字节";
+    string logStr = "发送打印口信息";
+    cout<<logStr<<endl;
+    logWrite(LocalLogPath, 0, logStr, nullptr, 0);
+
+    logStr = "发送" + to_string(44) + "字节";
     logWrite(LocalLogPath, 0, logStr, nullptr, 0);
 
     logStr ="(发送数据为：)";
@@ -723,7 +781,11 @@ int client::printQueAns()
 
     dataSend(buf,9);
 
-    string logStr = "发送" + to_string(9) + "字节";
+    string logStr = "发送打印队列信息";
+    cout<<logStr<<endl;
+    logWrite(LocalLogPath, 0, logStr, nullptr, 0);
+
+    logStr = "发送" + to_string(9) + "字节";
     logWrite(LocalLogPath, 0, logStr, nullptr, 0);
 
     logStr ="(发送数据为：)";
@@ -741,6 +803,8 @@ int client::ttySerInfoAns()
     if(total<async_term_num)
         total=async_term_num;
     int ipterm_num=total-async_term_num;
+
+    totalDevNum=totalDevNum+total;
 
     packHeadStuff(buf,0x91,0x09,280,0x0000,272);
 
@@ -772,7 +836,11 @@ int client::ttySerInfoAns()
 
     dataSend(buf,280);
 
-    string logStr = "发送" + to_string(280) + "字节";
+    string logStr = "发送终端服务器信息";
+    cout<<logStr<<endl;
+    logWrite(LocalLogPath, 0, logStr, nullptr, 0);
+
+    logStr = "发送" + to_string(280) + "字节";
     logWrite(LocalLogPath, 0, logStr, nullptr, 0);
 
     logStr ="(发送数据为：)";
@@ -787,6 +855,8 @@ int client::ttyInfoAns(short ttyType,short devid)
     const int everyScreenLength=96;
     byte screenNum=rand()%(maxScrNum-minScrNum)+minScrNum;
     byte buf[5000]={0};
+
+    totalScrNum=totalScrNum+screenNum;
 
     if(ttyType == 0x0a)
     {
@@ -840,7 +910,11 @@ int client::ttyInfoAns(short ttyType,short devid)
 
     dataSend(buf,36+everyScreenLength*screenNum);
 
-    string logStr = "发送" + to_string(36+everyScreenLength*screenNum) + "字节";
+    string logStr = "发送终端虚屏信息";
+    cout<<logStr<<endl;
+    logWrite(LocalLogPath, 0, logStr, nullptr, 0);
+
+    logStr = "发送" + to_string(36+everyScreenLength*screenNum) + "字节";
     logWrite(LocalLogPath, 0, logStr, nullptr, 0);
 
     logStr ="(发送数据为：)";
@@ -856,16 +930,44 @@ int client::disconAns()
 
     dataSend(buf,8);
 
-    string logStr = "发送" + to_string(8) + "字节";
+    string logStr = "发送断开信息";
+    cout<<logStr<<endl;
+    logWrite(LocalLogPath, 0, logStr, nullptr, 0);
+
+    logStr = "发送" + to_string(8) + "字节";
     logWrite(LocalLogPath, 0, logStr, nullptr, 0);
 
     logStr ="(发送数据为：)";
     logWrite(LocalLogPath, 1, logStr, buf, 8);
 
     logStr = "数据发送完毕,断开连接";
+    cout<<logStr<<endl;
     logWrite(LocalLogPath, 0, logStr, nullptr, 0);
 
     closeFlag=2;
+
+    return 0;
+}
+
+int xlsWrite(int devid,int devNum,int scrNum)
+{
+    int fd;
+    
+    fd = open("ts_cout.xls", O_RDWR | O_APPEND | O_CREAT, 0777);
+    if(fd < 0)
+	{   	
+		printf("Open file error\n");
+        return -1;
+    }
+    time_t t = time(nullptr);
+    struct tm *tmTime = localtime(&t);
+    char temp[100] = {0};
+    strftime(temp, sizeof(temp), "%Y-%m-%d %H:%M:%S ", tmTime);
+
+    
+    string buf=temp;
+    buf=buf+'\t'+to_string(devid)+'\t'+to_string(1)+'\t'+to_string(devNum)+'\t'+to_string(scrNum)+'\n';
+    write(fd, buf.c_str(), buf.size());
 
     return 0;
 }

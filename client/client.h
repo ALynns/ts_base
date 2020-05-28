@@ -11,8 +11,10 @@ class client{
         int exitOpt;
         int minDevNum;
         int maxDevNum;
+        int totalDevNum;
         int minScrNum;
         int maxScrNum;
+        int totalScrNum;
         int logOpt;
         string debugOpt;
         int debugOutput;
@@ -43,6 +45,8 @@ class client{
         void dataSend(const byte *sendBuf, int sendBufSize);
 
 };
+
+int xlsWrite(int devid,int devNum,int scrNum);
 
 
 #endif

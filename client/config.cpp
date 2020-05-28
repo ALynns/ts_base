@@ -59,6 +59,9 @@ client::client(int id)
     }
     
     devid=id;
+    totalDevNum=0;
+    totalScrNum=0;
+    
     serverIPAddr=configOpt["服务器IP地址"];//客户端IP地址
     port=atoi(configOpt["端口号"].c_str());
     exitOpt=atoi(configOpt["进程接收成功后退出"].c_str());

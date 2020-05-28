@@ -15,6 +15,7 @@ int main(int argc,char *argv[])
     
     for(int i=0;i<num;++i,++first_id)
     {
+        waitpid(0, NULL, WNOHANG);
         int pid=fork();
         if(pid)
             continue;
