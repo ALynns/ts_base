@@ -10,11 +10,15 @@ int main(int argc,char *argv[])
         return 0;
     }
 
+    
+    
+
     int num=atoi(argv[2]);
     int first_id=atoi(argv[1]);
     
     for(int i=0;i<num;++i,++first_id)
     {
+        srand(time(0)+i);
         waitpid(0, NULL, WNOHANG);
         int pid=fork();
         if(pid)

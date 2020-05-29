@@ -10,9 +10,8 @@ int client::clientMain()
 {
     if(logOpt)
     {
-        system("rm *.log");
+        remove("*.log");
     }
-    srand(time(0));
     byte buf[1000];
     while(1)
     {
@@ -294,16 +293,13 @@ void client::dataRecv(byte *recvBuf,int recvSize)
 	while (1)
 	{
 		ret = recv(socketfd, recvBuf, recvSize, 0);
-        if(ret==0)
+        if(ret<0)
         {
             closeFlag = 1;
             string logStr="对方关闭了连接";
             logWrite(LocalLogPath, 0, logStr, nullptr, 0);
             return;
         }    
-
-        if (ret < 0)
-			continue;
         else
         {
             recvSize = recvSize - ret;
@@ -325,6 +321,11 @@ int client::packAnalysis(byte buf[])
     }
     int dataLength = ntohs(*(short *)(buf + 2));
     dataRecv(buf + 8, dataLength - 8);
+    if(closeFlag==1)
+    {
+        cout<<"对方关闭了连接"<<endl;
+        return 0;
+    }
     string logStr="读取"+to_string(dataLength)+"字节";
     logWrite(LocalLogPath, 0, logStr, nullptr, 0);
 
@@ -678,10 +679,12 @@ int client::ethInfoAns(short eth)
         pos=ethInfo.find_first_not_of("0123456789",pos);
     }
 
-    dataSend(buf,132);
+    
 
     string logStr = "发送网口信息";
     cout<<logStr<<endl;
+
+    dataSend(buf,132);
     logWrite(LocalLogPath, 0, logStr, nullptr, 0);
 
     logStr = "发送" + to_string(132) + "字节";
@@ -734,10 +737,11 @@ int client::usbFileInfoAns()
     buf[8191+8]=0;
 
     packHeadStuff(buf,0x91,0x0c,length+8,0x0000,length);
-    dataSend(buf,length+8);
+    
 
     string logStr = "发送U盘文件信息";
     cout<<logStr<<endl;
+    dataSend(buf,length+8);
     logWrite(LocalLogPath, 0, logStr, nullptr, 0);
 
     logStr = "发送" + to_string(length+8) + "字节";
@@ -760,10 +764,12 @@ int client::printPortAns()
 
     memcpy(buf+12,str.c_str(),4);
 
-    dataSend(buf,44);
+    
 
     string logStr = "发送打印口信息";
     cout<<logStr<<endl;
+
+    dataSend(buf,44);
     logWrite(LocalLogPath, 0, logStr, nullptr, 0);
 
     logStr = "发送" + to_string(44) + "字节";
@@ -779,10 +785,10 @@ int client::printQueAns()
     byte buf[9]={0};
     packHeadStuff(buf,0x91,0x0d,9,0x0000,1);
 
-    dataSend(buf,9);
-
     string logStr = "发送打印队列信息";
     cout<<logStr<<endl;
+    dataSend(buf,9);
+    
     logWrite(LocalLogPath, 0, logStr, nullptr, 0);
 
     logStr = "发送" + to_string(9) + "字节";
@@ -799,7 +805,7 @@ int client::ttySerInfoAns()
     byte buf[280]={0};
 
     int total=rand()%(maxDevNum-minDevNum)+minDevNum;
-    int async_term_num=rand()%asyNum+1;
+    int async_term_num=asyNum==0?0:rand()%asyNum+1;
     if(total<async_term_num)
         total=async_term_num;
     int ipterm_num=total-async_term_num;
@@ -953,7 +959,7 @@ int xlsWrite(int devid,int devNum,int scrNum)
 {
     int fd;
     
-    fd = open("ts_cout.xls", O_RDWR | O_APPEND | O_CREAT, 0777);
+    fd = open("ts_cout.xls", O_RDWR| O_APPEND | O_CREAT, 0777);
     if(fd < 0)
 	{   	
 		printf("Open file error\n");

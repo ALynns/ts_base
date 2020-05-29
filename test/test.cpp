@@ -1,4 +1,4 @@
-#include "../common/common.h"
+#include "../server/common.h"
 
 using namespace std;
 

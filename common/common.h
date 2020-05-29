@@ -25,6 +25,7 @@
 #include <sys/errno.h>
 #include <arpa/inet.h>
 
+
 #define PACK_IDS_REQ_S 0//服务器认证请求
 #define PACK_VER_INFO_C 1//设备版本需求
 #define PACK_IDS_ANS_C 2//客户端认证信息
