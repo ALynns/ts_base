@@ -217,7 +217,7 @@ int client::localBind()
             break;
     }
     string logStr="服务器已连接";
-    logWrite(LocalLogPath, 0, logStr, nullptr, 0);
+    logWrite(LocalLogPath,devid, 0, logStr, nullptr, 0);
     return 0;
 }
 
@@ -297,7 +297,7 @@ void client::dataRecv(byte *recvBuf,int recvSize)
         {
             closeFlag = 1;
             string logStr="对方关闭了连接";
-            logWrite(LocalLogPath, 0, logStr, nullptr, 0);
+            logWrite(LocalLogPath,devid, 0, logStr, nullptr, 0);
             return;
         }    
         else
@@ -327,10 +327,10 @@ int client::packAnalysis(byte buf[])
         return 0;
     }
     string logStr="读取"+to_string(dataLength)+"字节";
-    logWrite(LocalLogPath, 0, logStr, nullptr, 0);
+    logWrite(LocalLogPath,devid, 0, logStr, nullptr, 0);
 
     logStr="(读取数据为:)";
-    logWrite(LocalLogPath, 1, logStr, buf, dataLength);
+    logWrite(LocalLogPath,devid, 1, logStr, buf, dataLength);
 
     switch ((u_char)buf[0])
     {
@@ -354,18 +354,18 @@ int client::identity(byte buf[])
 {
     string logStr="开始认证";
     cout<<logStr<<endl;
-    logWrite(LocalLogPath, 0, logStr.c_str(), nullptr, 0);
+    logWrite(LocalLogPath,devid, 0, logStr.c_str(), nullptr, 0);
     short ver1 = ntohs(*(short *)(buf + 8));
     u_char ver2 = *(buf + 10);
     u_char ver3 = *(buf + 11);
 
     logStr="版本号"+to_string(ver1)+"."+to_string(ver2)+"."+to_string(ver3);
-    logWrite(LocalLogPath, 0, logStr.c_str(), nullptr, 0);
+    logWrite(LocalLogPath,devid, 0, logStr.c_str(), nullptr, 0);
     if (ver1 < 2)
     {
         logStr="版本过低";
         cout << logStr << endl;
-        logWrite(LocalLogPath, 0, logStr, nullptr, 0);
+        logWrite(LocalLogPath,devid, 0, logStr, nullptr, 0);
         closeFlag = 1;
         return -1;
     }
@@ -376,12 +376,12 @@ int client::identity(byte buf[])
     
 
     logStr="服务器时间:"+to_string(st->tm_year + 1900)+"-"+to_string(st->tm_mon)+"-"+to_string(st->tm_mday)+" "+to_string(st->tm_hour)+":"+to_string(st->tm_min)+":"+to_string(st->tm_sec);
-    logWrite(LocalLogPath, 0, logStr.c_str(), nullptr, 0);
+    logWrite(LocalLogPath,devid, 0, logStr.c_str(), nullptr, 0);
     if(st->tm_year + 1900 < 2017)
     {
         logStr="数字证书过期";
         cout << logStr << endl;
-        logWrite(LocalLogPath, 0, logStr.c_str(), nullptr, 0);
+        logWrite(LocalLogPath,devid, 0, logStr.c_str(), nullptr, 0);
         closeFlag = 1;
         return -1;
     }
@@ -399,14 +399,14 @@ int client::identity(byte buf[])
     {
         logStr="本地认证成功";
         cout<<logStr<<endl;
-        logWrite(LocalLogPath, 0, logStr, nullptr, 0);
+        logWrite(LocalLogPath,devid, 0, logStr, nullptr, 0);
         return 0;
     }
     else
     {
         logStr="本地认证非法";
         cout << logStr << endl;
-        logWrite(LocalLogPath, 0, logStr, nullptr, 0);
+        logWrite(LocalLogPath,devid, 0, logStr, nullptr, 0);
         closeFlag = 1;
         return -1;
     }
@@ -423,13 +423,13 @@ int client::minimumVerReq()
 
     string logStr = "发送最低版本信息";
     cout<<logStr<<endl;
-    logWrite(LocalLogPath, 0, logStr, nullptr, 0);
+    logWrite(LocalLogPath,devid, 0, logStr, nullptr, 0);
 
     logStr = "发送" + to_string(12) + "字节";
-    logWrite(LocalLogPath, 0, logStr, nullptr, 0);
+    logWrite(LocalLogPath,devid, 0, logStr, nullptr, 0);
 
     logStr = "(发送数据为:)";
-    logWrite(LocalLogPath, 1, logStr, buf, 12);
+    logWrite(LocalLogPath,devid, 1, logStr, buf, 12);
     return 0;
 }
 
@@ -486,13 +486,13 @@ int client::idsAns()
 
     string logStr = "发送认证信息与基本配置信息";
     cout<<logStr<<endl;
-    logWrite(LocalLogPath, 0, logStr, nullptr, 0);
+    logWrite(LocalLogPath,devid, 0, logStr, nullptr, 0);
 
     logStr = "发送" + to_string(116) + "字节";
-    logWrite(LocalLogPath, 0, logStr, nullptr, 0);
+    logWrite(LocalLogPath,devid, 0, logStr, nullptr, 0);
 
     logStr ="(发送数据为：)";
-    logWrite(LocalLogPath, 1, logStr, buf, 116);
+    logWrite(LocalLogPath,devid, 1, logStr, buf, 116);
 
     return 0;
 }
@@ -543,13 +543,13 @@ int client::sysInfoAns()
 
     string logStr = "发送系统信息";
     cout<<logStr<<endl;
-    logWrite(LocalLogPath, 0, logStr, nullptr, 0);
+    logWrite(LocalLogPath,devid, 0, logStr, nullptr, 0);
 
     logStr = "发送" + to_string(28) + "字节";
-    logWrite(LocalLogPath, 0, logStr, nullptr, 0);
+    logWrite(LocalLogPath,devid, 0, logStr, nullptr, 0);
 
     logStr ="(发送数据为：)";
-    logWrite(LocalLogPath, 1, logStr, buf, 28);
+    logWrite(LocalLogPath,devid, 1, logStr, buf, 28);
 
     return 0;
 }
@@ -582,13 +582,13 @@ int client::configAns()
 
     string logStr = "发送配置信息";
     cout<<logStr<<endl;
-    logWrite(LocalLogPath, 0, logStr, nullptr, 0);
+    logWrite(LocalLogPath,devid, 0, logStr, nullptr, 0);
 
     logStr = "发送" + to_string(length+8) + "字节";
-    logWrite(LocalLogPath, 0, logStr, nullptr, 0);
+    logWrite(LocalLogPath,devid, 0, logStr, nullptr, 0);
 
     logStr ="(发送数据为：)";
-    logWrite(LocalLogPath, 1, logStr, buf, length+8);
+    logWrite(LocalLogPath,devid, 1, logStr, buf, length+8);
 
     return 0;
 }
@@ -622,13 +622,13 @@ int client::procInfoAns()
 
     string logStr = "发送进程信息";
     cout<<logStr<<endl;
-    logWrite(LocalLogPath, 0, logStr, nullptr, 0);
+    logWrite(LocalLogPath,devid, 0, logStr, nullptr, 0);
 
     logStr = "发送" + to_string(length+8) + "字节";
-    logWrite(LocalLogPath, 0, logStr, nullptr, 0);
+    logWrite(LocalLogPath,devid, 0, logStr, nullptr, 0);
 
     logStr ="(发送数据为：)";
-    logWrite(LocalLogPath, 1, logStr, buf, length+8);
+    logWrite(LocalLogPath,devid, 1, logStr, buf, length+8);
 
 
     return 0;
@@ -685,13 +685,13 @@ int client::ethInfoAns(short eth)
     cout<<logStr<<endl;
 
     dataSend(buf,132);
-    logWrite(LocalLogPath, 0, logStr, nullptr, 0);
+    logWrite(LocalLogPath,devid, 0, logStr, nullptr, 0);
 
     logStr = "发送" + to_string(132) + "字节";
-    logWrite(LocalLogPath, 0, logStr, nullptr, 0);
+    logWrite(LocalLogPath,devid, 0, logStr, nullptr, 0);
 
     logStr ="(发送数据为：)";
-    logWrite(LocalLogPath, 1, logStr, buf, 132);
+    logWrite(LocalLogPath,devid, 1, logStr, buf, 132);
 
     return 0;
 }
@@ -705,10 +705,10 @@ int client::usbInfoAns()
     dataSend(buf,12);
 
     string logStr = "发送" + to_string(12) + "字节";
-    logWrite(LocalLogPath, 0, logStr, nullptr, 0);
+    logWrite(LocalLogPath,devid, 0, logStr, nullptr, 0);
 
     logStr ="(发送数据为：)";
-    logWrite(LocalLogPath, 1, logStr, buf, 12);
+    logWrite(LocalLogPath,devid, 1, logStr, buf, 12);
 
     return 0;
 }
@@ -742,13 +742,13 @@ int client::usbFileInfoAns()
     string logStr = "发送U盘文件信息";
     cout<<logStr<<endl;
     dataSend(buf,length+8);
-    logWrite(LocalLogPath, 0, logStr, nullptr, 0);
+    logWrite(LocalLogPath,devid, 0, logStr, nullptr, 0);
 
     logStr = "发送" + to_string(length+8) + "字节";
-    logWrite(LocalLogPath, 0, logStr, nullptr, 0);
+    logWrite(LocalLogPath,devid, 0, logStr, nullptr, 0);
 
     logStr ="(发送数据为：)";
-    logWrite(LocalLogPath, 1, logStr, buf, length+8);
+    logWrite(LocalLogPath,devid, 1, logStr, buf, length+8);
 
 
     return 0;
@@ -770,13 +770,13 @@ int client::printPortAns()
     cout<<logStr<<endl;
 
     dataSend(buf,44);
-    logWrite(LocalLogPath, 0, logStr, nullptr, 0);
+    logWrite(LocalLogPath,devid, 0, logStr, nullptr, 0);
 
     logStr = "发送" + to_string(44) + "字节";
-    logWrite(LocalLogPath, 0, logStr, nullptr, 0);
+    logWrite(LocalLogPath,devid, 0, logStr, nullptr, 0);
 
     logStr ="(发送数据为：)";
-    logWrite(LocalLogPath, 1, logStr, buf, 44);
+    logWrite(LocalLogPath,devid, 1, logStr, buf, 44);
     return 0;
 }
 
@@ -789,13 +789,13 @@ int client::printQueAns()
     cout<<logStr<<endl;
     dataSend(buf,9);
     
-    logWrite(LocalLogPath, 0, logStr, nullptr, 0);
+    logWrite(LocalLogPath,devid, 0, logStr, nullptr, 0);
 
     logStr = "发送" + to_string(9) + "字节";
-    logWrite(LocalLogPath, 0, logStr, nullptr, 0);
+    logWrite(LocalLogPath,devid, 0, logStr, nullptr, 0);
 
     logStr ="(发送数据为：)";
-    logWrite(LocalLogPath, 1, logStr, buf, 9);
+    logWrite(LocalLogPath,devid, 1, logStr, buf, 9);
 
     return 0;
 }
@@ -844,13 +844,13 @@ int client::ttySerInfoAns()
 
     string logStr = "发送终端服务器信息";
     cout<<logStr<<endl;
-    logWrite(LocalLogPath, 0, logStr, nullptr, 0);
+    logWrite(LocalLogPath,devid, 0, logStr, nullptr, 0);
 
     logStr = "发送" + to_string(280) + "字节";
-    logWrite(LocalLogPath, 0, logStr, nullptr, 0);
+    logWrite(LocalLogPath,devid, 0, logStr, nullptr, 0);
 
     logStr ="(发送数据为：)";
-    logWrite(LocalLogPath, 1, logStr, buf, 280);
+    logWrite(LocalLogPath,devid, 1, logStr, buf, 280);
 
     return 0;
 }
@@ -918,13 +918,13 @@ int client::ttyInfoAns(short ttyType,short devid)
 
     string logStr = "发送终端虚屏信息";
     cout<<logStr<<endl;
-    logWrite(LocalLogPath, 0, logStr, nullptr, 0);
+    logWrite(LocalLogPath,devid, 0, logStr, nullptr, 0);
 
     logStr = "发送" + to_string(36+everyScreenLength*screenNum) + "字节";
-    logWrite(LocalLogPath, 0, logStr, nullptr, 0);
+    logWrite(LocalLogPath,devid, 0, logStr, nullptr, 0);
 
     logStr ="(发送数据为：)";
-    logWrite(LocalLogPath, 1, logStr, buf, 36+everyScreenLength*screenNum);
+    logWrite(LocalLogPath,devid, 1, logStr, buf, 36+everyScreenLength*screenNum);
 
     return 0;
 }
@@ -938,17 +938,17 @@ int client::disconAns()
 
     string logStr = "发送断开信息";
     cout<<logStr<<endl;
-    logWrite(LocalLogPath, 0, logStr, nullptr, 0);
+    logWrite(LocalLogPath,devid, 0, logStr, nullptr, 0);
 
     logStr = "发送" + to_string(8) + "字节";
-    logWrite(LocalLogPath, 0, logStr, nullptr, 0);
+    logWrite(LocalLogPath,devid, 0, logStr, nullptr, 0);
 
     logStr ="(发送数据为：)";
-    logWrite(LocalLogPath, 1, logStr, buf, 8);
+    logWrite(LocalLogPath,devid, 1, logStr, buf, 8);
 
     logStr = "数据发送完毕,断开连接";
     cout<<logStr<<endl;
-    logWrite(LocalLogPath, 0, logStr, nullptr, 0);
+    logWrite(LocalLogPath,devid, 0, logStr, nullptr, 0);
 
     closeFlag=2;
 

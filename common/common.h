@@ -63,7 +63,7 @@ const string LocalLogPath = "./local.log";
 
 
 int packHeadStuff(byte *packBuf, byte headOpt1, byte headOpt2, short packLength, short headOpt3, short dataLength);
-int logWrite(string logPath, int mode, string opt, const byte data[], int dataLength);
+int logWrite(string logPath,int devid, int mode, string opt, const byte data[], int dataLength);
 int getCPUMHz();
 int getRAM();
 string randStr(int length);

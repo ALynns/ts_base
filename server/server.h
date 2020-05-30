@@ -16,8 +16,8 @@ class server{
         string dbName;
         string userName;
         string userPwd;
-        int unAckTimeOut;
-        int transTimeOut;
+        struct timeval unAcktv;//Î´Ó¦´ð³¬Ê±
+        struct timeval transtv;
         int mainLogSize;
         int branchLogSize;
         int screenPrint;
@@ -30,21 +30,24 @@ class server{
         int clientSocket;
         MYSQL *conn_ptr;
 
-        int idsFlag;
-        
+        int devid;
+        int closeFlag;
+        struct sockaddr_in clientAddr;
+
+
     public:
         server();
         void infoPrint();
         int serverMain();
 
-        void dataRecv(byte *recvBuf,int recvSize);
+        void dataRecv(byte *recvBuf,int recvSize,struct timeval tv);
         void dataSend(const byte *sendBuf, int sendBufSize);
         
         int hostBind();
         int clientAccept();
-        int packAnalysis(byte *buf);
+        int packAnalysis(byte *buf,struct timeval tv);
 
-        int identity(byte idsBuf[]);//
+        int identity();//
 
         int mysqlInit();
         int mysqlOpt(const char *optStr, int *row, int *col, char **result[]);

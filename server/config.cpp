@@ -72,7 +72,8 @@ server::server()
         }
     }
     
-    idsFlag=0;
+    //idsFlag=0;
+    devid=0;
 
     listenPort=atoi(configOpt["监听端口号"].c_str());
     connectInterval=atoi(configOpt["设备连接间隔"].c_str());
@@ -82,8 +83,8 @@ server::server()
     dbName=configOpt["数据库名"];
     userName=configOpt["用户名"];
     userPwd=configOpt["用户口令"];
-    unAckTimeOut=atoi(configOpt["未应答超时"].c_str());
-    transTimeOut=atoi(configOpt["传输超时"].c_str());
+    unAcktv.tv_sec=atoi(configOpt["未应答超时"].c_str());
+    transtv.tv_sec=atoi(configOpt["传输超时"].c_str());
     mainLogSize=atoi(configOpt["主日志大小"].c_str());
     branchLogSize=atoi(configOpt["分日志大小"].c_str());
     screenPrint=atoi(configOpt["屏幕显示"].c_str());
@@ -110,8 +111,8 @@ void server::infoPrint()
     cout << "用户口令" << "\t" << userPwd<< endl;
 
     cout<<"[系统设置]"<<endl;
-    cout << "未应答超时" << "\t" << unAckTimeOut<< endl;
-    cout << "传输超时" << "\t" << transTimeOut<< endl;
+    cout << "未应答超时" << "\t" << unAcktv.tv_sec<< endl;
+    cout << "传输超时" << "\t" <<transtv.tv_sec << endl;
     cout << "主日志大小" << "\t" << mainLogSize<< endl;
     cout << "分日志大小" << "\t" << branchLogSize<< endl;
 

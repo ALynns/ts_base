@@ -2,7 +2,7 @@
 
 using namespace std;
 
-int logWrite(string logPath, int mode, string opt, const byte data[], int dataLength)
+int logWrite(string logPath,int devid, int mode, string opt, const byte data[], int dataLength)
 {
     int fd;
     char temp[100] = {0};
@@ -19,7 +19,7 @@ int logWrite(string logPath, int mode, string opt, const byte data[], int dataLe
 
     strftime(temp, sizeof(temp), "%Y-%m-%d %H:%M:%S ", tmTime);
     string buf = temp;
-    buf = buf + " [" + to_string(getpid()) + "]" + opt + "\n";
+    buf = buf + " [" + to_string(devid) + "]" + opt + "\n";
 
     switch (mode)
     {
