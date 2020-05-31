@@ -74,7 +74,7 @@ server::server()
     
     //idsFlag=0;
     devid=0;
-
+    con=0;
     listenPort=atoi(configOpt["监听端口号"].c_str());
     connectInterval=atoi(configOpt["设备连接间隔"].c_str());
     sampleInterval=atoi(configOpt["设备采样间隔"].c_str());

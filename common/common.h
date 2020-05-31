@@ -68,5 +68,6 @@ int getCPUMHz();
 int getRAM();
 string randStr(int length);
 string getEth(string ethName);
+string INTtoIP(uint32_t num);
 #endif
 

@@ -39,6 +39,7 @@ int client::clientMain()
         else
         {
             closeFlag = 1;
+            cout<<"未发送认证包"<<endl;
         }
         
 
@@ -253,6 +254,14 @@ void client::dataSend(const byte *sendBuf, int sendBufSize)
 		ret = send(socketfd, &sendBuf[ret],sendBufSize, 0);
         if(ret>0)
             sendBufSize=sendBufSize-ret;
+        else
+        {
+            if(ret<0)
+            {
+                cout<<"send error"<<endl;
+                exit(-1);
+            }
+        }
 		if(sendBufSize==0)
             break;
 	}
@@ -307,6 +316,7 @@ void client::dataRecv(byte *recvBuf,int recvSize)
                 break;
         }
     }
+    
 
 
 }
@@ -395,6 +405,7 @@ int client::identity(byte buf[])
         encryptedStr[i] = encryptedStr[i] ^ secret[pos % 4093];
     }
     string r_s = encryptedStr;
+
     if(r_s==IdsStr)
     {
         logStr="本地认证成功";
@@ -485,7 +496,7 @@ int client::idsAns()
     dataSend(buf,116);
 
     string logStr = "发送认证信息与基本配置信息";
-    cout<<logStr<<endl;
+
     logWrite(LocalLogPath,devid, 0, logStr, nullptr, 0);
 
     logStr = "发送" + to_string(116) + "字节";

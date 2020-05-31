@@ -5,9 +5,12 @@ using namespace std;
 int server::mysqlInit()
 {
     conn_ptr = mysql_init(NULL);
-    conn_ptr = mysql_real_connect(conn_ptr, serverIPAddr.c_str(), dbName.c_str(), userName.c_str(), userPwd.c_str(), 0, NULL, 0);
+    conn_ptr = mysql_real_connect(conn_ptr, serverIPAddr.c_str(),  userName.c_str(), userPwd.c_str(),dbName.c_str(), serverPort, NULL, 0);
     if(!conn_ptr)
-        return -1;
+    {
+        cout<<"mysql init error";
+        exit(-1);
+    }
     return 0;
 }
 
@@ -63,7 +66,7 @@ int server::mysqlOpt(const char *optStr, int *row, int *col, char **result[])
 
 int server::mysqlSelect(const char *selectItem, const char *tableName, const char *opt, int *row, int *col, char **result[])
 {
-    char optStr[200] = {0};
+    char optStr[5000] = {0};
     sprintf(optStr,"select %s from %s ",selectItem,tableName);
     if(opt)
     {
@@ -79,7 +82,14 @@ int server::mysqlSelect(const char *selectItem, const char *tableName, const cha
 
 int server::mysqlInsert(const char *tableName, const char *opt)
 {
-    char optStr[200] = {0};
+    char optStr[5000] = {0};
     sprintf(optStr,"insert into %s values(%s);",tableName,opt);
+    return mysqlOpt(optStr, NULL, NULL, NULL);
+}
+
+int server::mysqlUpdate(const char *tableName,const char *val, const char *opt)
+{
+    char optStr[10000] = {0};
+    sprintf(optStr,"update %s set %s where %s ;",tableName,val,opt);
     return mysqlOpt(optStr, NULL, NULL, NULL);
 }

@@ -72,3 +72,24 @@ string getEth(string ethName)
 
     return s;
 }
+
+string INTtoIP(uint32_t num)
+{  
+
+    string strRet = "";  
+    for (int i=0;i<4;i++)  
+    {  
+        uint32_t tmp=(num>>((3-i)*8))&0xFF;  
+
+        char chBuf[8] = "";
+        sprintf(chBuf,"%d",tmp);
+        strRet += chBuf;
+
+        if (i < 3)
+        {
+            strRet += ".";
+        }
+    }  
+
+    return strRet;  
+}
